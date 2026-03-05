@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeSculptor - Algorithm Examples</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/advanced-viz.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #0F2027 0%, #203A43 50%, #2C5364 100%);
+            background-attachment: fixed;
+        }
+
+        .examples-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem;
+        }
+
+        .page-header h1 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 2.5rem;
+            color: var(--color-light);
+            margin-bottom: 0.75rem;
+        }
+
+        .page-header p {
+            font-size: 1.125rem;
+            color: rgba(224, 224, 224, 0.7);
+        }
+
+        .category-section {
+            margin-bottom: 3rem;
+        }
+
+        .category-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid rgba(44, 83, 100, 0.5);
+        }
+
+        .category-icon {
+            font-size: 1.75rem;
+            width: 50px;
+            height: 50px;
+            background: rgba(44, 83, 100, 0.3);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--color-primary);
+        }
+
+        .category-icon svg {
+            color: var(--color-primary);
+        }
+
+        .category-title {
+            font-family: 'DM Serif Display', serif;
+            font-size: 1.5rem;
+            font-weight: 400;
+            color: var(--color-light);
+            margin: 0;
+        }
+
+        .examples-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.25rem;
+        }
+
+        .example-card {
+            background: rgba(15, 32, 39, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1.75rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .example-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .example-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(255, 255, 255, 0.25);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+            background: rgba(15, 32, 39, 0.8);
+        }
+
+        .example-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .example-card h3 {
+            font-family: 'DM Serif Display', serif;
+            color: var(--color-light);
+            margin-bottom: 0.75rem;
+            font-size: 1.25rem;
+            font-weight: 400;
+        }
+
+        .example-card p {
+            color: rgba(224, 224, 224, 0.7);
+            font-size: 0.9375rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .example-card code {
+            display: block;
+            background: rgba(10, 17, 22, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            color: var(--color-light);
+            font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+            overflow-x: auto;
+        }
+
+        .difficulty-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .difficulty-easy {
+            background: rgba(67, 160, 71, 0.2);
+            color: #81C784;
+            border: 1px solid rgba(67, 160, 71, 0.3);
+        }
+
+        .difficulty-medium {
+            background: rgba(255, 179, 0, 0.2);
+            color: #FFB300;
+            border: 1px solid rgba(255, 179, 0, 0.3);
+        }
+
+        .difficulty-hard {
+            background: rgba(229, 57, 53, 0.2);
+            color: #E57373;
+            border: 1px solid rgba(229, 57, 53, 0.3);
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: rgba(44, 83, 100, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            color: var(--color-light);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            margin-bottom: 2rem;
+        }
+
+        .back-button:hover {
+            background: rgba(44, 83, 100, 0.5);
+            border-color: rgba(255, 255, 255, 0.25);
+            transform: translateX(-4px);
+        }
+
+        @media (max-width: 768px) {
+            .examples-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .page-header h1 {
+                font-size: 2rem;
+            }
+
+            .category-title {
+                font-size: 1.25rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Professional Header -->
+    <header class="app-header">
+        <div class="header-content">
+            <div class="logo-section">
+                <a href="index.html" class="logo">CodeSculptor</a>
+                <span class="tagline">Algorithm Examples</span>
+            </div>
+            <nav class="header-nav">
+                <a href="app.html" class="nav-link">Visualizer</a>
+                <a href="get-started.html" class="nav-link">Guide</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="examples-container">
+        <div class="page-header">
+            <h1>Algorithm Examples</h1>
+            <p>Click any example to see it in action</p>
+        </div>
+
+        <!-- Sorting Algorithms -->
+        <div class="category-section">
+            <div class="category-header">
+                <div class="category-icon">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <polyline points="19 12 12 19 5 12"></polyline>
+                    </svg>
+                </div>
+                <h2 class="category-title">Sorting Algorithms</h2>
+            </div>
+            <div class="examples-grid">
+                <div class="example-card" onclick="loadExample('Bubble sort the array [64, 34, 25, 12, 22, 11, 90]')">
+                    <span class="difficulty-badge difficulty-easy">Easy</span>
+                    <h3>Bubble Sort</h3>
+                    <p>Repeatedly swap adjacent elements if they're in wrong order</p>
+                    <code>Bubble sort [64, 34, 25, 12, 22, 11, 90]</code>
+                </div>
+
+                <div class="example-card" onclick="loadExample('Selection sort the numbers: 29, 10, 14, 37, 13')">
+                    <span class="difficulty-badge difficulty-easy">Easy</span>
+                    <h3>Selection Sort</h3>
+                    <p>Find minimum element and place it at beginning</p>
+                    <code>Selection sort [29, 10, 14, 37, 13]</code>
+                </div>
+
+                <div class="example-card" onclick="loadExample('Insertion sort array [12, 11, 13, 5, 6]')">
+                    <span class="difficulty-badge difficulty-easy">Easy</span>
+                    <h3>Insertion Sort</h3>
+                    <p>Build sorted array one element at a time</p>
+                    <code>Insertion sort [12, 11, 13, 5, 6]</code>
+                </div>
+
+                <div class="example-card" onclick="loadExample('Merge sort the array [38, 27, 43, 3, 9, 82, 10]')">
+                    <span class="difficulty-badge difficulty-medium">Medium</span>
+                    <h3>Merge Sort</h3>
+                    <p>Divide and conquer sorting algorithm</p>
+                    <code>Merge sort [38, 27, 43, 3, 9, 82, 10]</code>
+                </div>
+            </div>
+        </div>
+
+        <!-- Searching Algorithms -->
+        <div class="category-section">
+            <div class="category-header">
+                <div class="category-icon">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.35-4.35"></path>
+                    </svg>
+                </div>
+                <h2 class="category-title">Searching Algorithms</h2>
+            </div>
+            <div class="examples-grid">
+                <div class="example-card"
+                    onclick="loadExample('Binary search for 25 in sorted array [11, 12, 22, 25, 34, 64, 90]')">
+                    <span class="difficulty-badge difficulty-easy">Easy</span>
+                    <h3>Binary Search</h3>
+                    <p>Efficiently search in sorted array by halving search space</p>
+                    <code>Binary search for 25 in [11, 12, 22, 25, 34, 64, 90]</code>
+                </div>
+
+                <div class="example-card"
+                    onclick="loadExample('Binary search for 50 in array [10, 20, 30, 40, 50, 60, 70, 80, 90]')">
+                    <span class="difficulty-badge difficulty-easy">Easy</span>
+                    <h3>Binary Search (Large)</h3>
+                    <p>Search in larger sorted dataset</p>
+                    <code>Binary search for 50 in [10, 20, ..., 90]</code>
+                </div>
+            </div>
+        </div>
+
+        <!-- Graph Algorithms -->
+        <div class="category-section">
+            <div class="category-header">
+                <div class="category-icon">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="18" cy="5" r="3"></circle>
+                        <circle cx="6" cy="12" r="3"></circle>
+                        <circle cx="18" cy="19" r="3"></circle>
+                        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                    </svg>
+                </div>
+                <h2 class="category-title">Graph Algorithms</h2>
+            </div>
+            <div class="examples-grid">
+                <div class="example-card" onclick="loadExample('BFS traversal of graph: A-B, A-C, B-D, B-E, C-F, E-F')">
+                    <span class="difficulty-badge difficulty-medium">Medium</span>
+                    <h3>Breadth-First Search (BFS)</h3>
+                    <p>Level-by-level graph traversal using queue</p>
+                    <code>BFS: A→B, A→C, B→D, B→E, C→F</code>
+                </div>
+
+                <div class="example-card" onclick="loadExample('DFS traversal of graph: A-B, A-C, B-D, B-E, C-F, E-F')">
+                    <span class="difficulty-badge difficulty-medium">Medium</span>
+                    <h3>Depth-First Search (DFS)</h3>
+                    <p>Deep exploration using stack</p>
+                    <code>DFS: A→B, A→C, B→D, B→E, C→F</code>
+                </div>
+
+                <div class="example-card"
+                    onclick="loadExample('BFS on graph {A: [B, C], B: [D], C: [D, E], D: [E], E: []}')">
+                    <span class="difficulty-badge difficulty-medium">Medium</span>
+                    <h3>BFS (Complex Graph)</h3>
+                    <p>Traverse more complex graph structure</p>
+                    <code>BFS with multiple paths</code>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tree Algorithms -->
+        <div class="category-section">
+            <div class="category-header">
+                <div class="category-icon">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2v20M17 7H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                    </svg>
+                </div>
+                <h2 class="category-title">Tree Algorithms</h2>
+            </div>
+            <div class="examples-grid">
+                <div class="example-card" onclick="loadExample('Build BST by inserting: 5, 3, 7, 2, 4, 6, 8')">
+                    <span class="difficulty-badge difficulty-medium">Medium</span>
+                    <h3>Binary Search Tree</h3>
+                    <p>Build BST with insertion sequence</p>
+                    <code>BST insert: 5, 3, 7, 2, 4, 6, 8</code>
+                </div>
+
+                <div class="example-card" onclick="loadExample('Create BST from array [15, 10, 20, 8, 12, 17, 25]')">
+                    <span class="difficulty-badge difficulty-medium">Medium</span>
+                    <h3>BST (Balanced)</h3>
+                    <p>Build balanced binary search tree</p>
+                    <code>BST: [15, 10, 20, 8, 12, 17, 25]</code>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recursion & DP -->
+        <div class="category-section">
+            <div class="category-header">
+                <div class="category-icon">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="23 4 23 10 17 10"></polyline>
+                        <polyline points="1 20 1 14 7 14"></polyline>
+                        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                    </svg>
+                </div>
+                <h2 class="category-title">Recursion & Dynamic Programming</h2>
+            </div>
+            <div class="examples-grid">
+                <div class="example-card" onclick="loadExample('Calculate Fibonacci of 5')">
+                    <span class="difficulty-badge difficulty-easy">Easy</span>
+                    <h3>Fibonacci (Recursion)</h3>
+                    <p>Visualize recursive call tree</p>
+                    <code>Fibonacci(5)</code>
+                </div>
+            </div>
+        </div>
+
+        <!-- Custom Examples -->
+        <div class="category-section">
+            <div class="category-header">
+                <div class="category-icon">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 20h9"></path>
+                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                    </svg>
+                </div>
+                <h2 class="category-title">Custom Examples</h2>
+            </div>
+            <div class="examples-grid">
+                <div class="example-card" onclick="loadExample('Sort my numbers: 99, 45, 67, 23, 88, 12, 56, 34')">
+                    <span class="difficulty-badge difficulty-easy">Easy</span>
+                    <h3>Custom Array Sort</h3>
+                    <p>Sort your own array</p>
+                    <code>Custom: [99, 45, 67, 23, 88, 12, 56, 34]</code>
+                </div>
+
+                <div class="example-card" onclick="loadExample('Search for 67 in [12, 23, 34, 45, 56, 67, 78, 89]')">
+                    <span class="difficulty-badge difficulty-easy">Easy</span>
+                    <h3>Custom Search</h3>
+                    <p>Search in your own array</p>
+                    <code>Find 67 in sorted array</code>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function loadExample(text) {
+            // Store the example text
+            localStorage.setItem('example_text', text);
+            // Redirect to main page
+            window.location.href = 'app.html';
+        }
+    </script>
+</body>
+
+</html>

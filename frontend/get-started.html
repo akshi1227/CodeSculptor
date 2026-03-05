@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeSculptor - Get Started Guide</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/advanced-viz.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #0F2027 0%, #203A43 50%, #2C5364 100%);
+            background-attachment: fixed;
+        }
+
+        .guide-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem;
+        }
+
+        .page-header h1 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 2.5rem;
+            color: var(--color-light);
+            margin-bottom: 0.75rem;
+        }
+
+        .page-header p {
+            font-size: 1.125rem;
+            color: rgba(224, 224, 224, 0.7);
+        }
+
+        .guide-step {
+            background: rgba(15, 32, 39, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            gap: 1.5rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .guide-step::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(180deg, var(--color-primary), var(--color-secondary));
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
+        }
+
+        .guide-step:hover {
+            transform: translateX(8px);
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        .guide-step:hover::before {
+            transform: scaleY(1);
+        }
+
+        .step-number {
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(44, 83, 100, 0.3);
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        .step-content h3 {
+            font-family: 'DM Serif Display', serif;
+            color: var(--color-light);
+            margin-bottom: 0.75rem;
+            font-size: 1.375rem;
+            font-weight: 400;
+        }
+
+        .step-content p {
+            color: rgba(224, 224, 224, 0.8);
+            line-height: 1.7;
+            font-size: 1rem;
+        }
+
+        .step-content code {
+            background: rgba(10, 17, 22, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+            font-size: 0.875rem;
+            color: var(--color-light);
+        }
+
+        .cta-container {
+            text-align: center;
+            margin-top: 3rem;
+            padding: 3rem 2rem;
+            background: rgba(15, 32, 39, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+        }
+
+        .cta-container h2 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 2rem;
+            color: var(--color-light);
+            margin-bottom: 1rem;
+        }
+
+        .cta-container p {
+            color: rgba(224, 224, 224, 0.7);
+            margin-bottom: 2rem;
+            font-size: 1.125rem;
+        }
+
+        .cta-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1.125rem 2.5rem;
+            background: linear-gradient(135deg, var(--color-primary) 0%, #2A6F8F 100%);
+            color: var(--color-light);
+            text-decoration: none;
+            border-radius: 12px;
+            font-size: 1.125rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(44, 83, 100, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(44, 83, 100, 0.4);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.25rem;
+            margin: 2rem 0;
+        }
+
+        .feature-box {
+            background: rgba(10, 17, 22, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .feature-box:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-4px);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--color-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .feature-icon svg {
+            color: var(--color-primary);
+            transition: all 0.3s ease;
+        }
+
+        .feature-box:hover .feature-icon svg {
+            color: var(--color-light);
+            transform: scale(1.1);
+        }
+
+        .feature-box h4 {
+            color: var(--color-light);
+            margin-bottom: 0.5rem;
+            font-size: 1.125rem;
+        }
+
+        .feature-box p {
+            color: rgba(224, 224, 224, 0.7);
+            font-size: 0.9375rem;
+        }
+
+        @media (max-width: 768px) {
+            .guide-step {
+                flex-direction: column;
+            }
+
+            .page-header h1 {
+                font-size: 2rem;
+            }
+
+            .cta-container h2 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Professional Header -->
+    <header class="app-header">
+        <div class="header-content">
+            <div class="logo-section">
+                <a href="index.html" class="logo">CodeSculptor</a>
+                <span class="tagline">Get Started Guide</span>
+            </div>
+            <nav class="header-nav">
+                <a href="app.html" class="nav-link">Visualizer</a>
+                <a href="examples.html" class="nav-link">Examples</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="guide-container">
+        <div class="page-header">
+            <h1>How to Use CodeSculptor</h1>
+            <p>Your step-by-step guide to algorithmic mastery</p>
+        </div>
+
+        <!-- Step 1 -->
+        <div class="guide-step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+                <h3>Describe Your Algorithm</h3>
+                <p>Type your algorithm in plain English. For example: <code>Sort the array [5, 3, 8, 1] using bubble
+                        sort</code> or <code>Find the Fibonacci number of 5</code>. You don't need to know complex
+                    syntax – just describe what you want to do!</p>
+            </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="guide-step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+                <h3>Generate Visualization</h3>
+                <p>Click the <strong>"Generate Visualization"</strong> button. Our AI engine will translate your words
+                    into structured, easy-to-read pseudocode and create a step-by-step visualization instantly.</p>
+            </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="guide-step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+                <h3>Watch & Learn</h3>
+                <p>See your code come to life! The visualizer will animate the algorithm step-by-step on the left,
+                    while the pseudocode is highlighted on the right. You can play, pause, reset, and even listen to
+                    voice narration to understand the logic visually and audibly.</p>
+            </div>
+        </div>
+
+        <!-- Features Grid -->
+        <div class="features-grid">
+            <div class="feature-box">
+                <div class="feature-icon">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                    </svg>
+                </div>
+                <h4>Fast & Intuitive</h4>
+                <p>Get results in seconds with our AI-powered engine</p>
+            </div>
+
+            <div class="feature-box">
+                <div class="feature-icon">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path
+                            d="M12 1v6m0 6v6m5.2-13.2l-4.2 4.2m0 6l4.2 4.2M23 12h-6m-6 0H1m18.2 5.2l-4.2-4.2m0-6l4.2-4.2">
+                        </path>
+                    </svg>
+                </div>
+                <h4>Beautiful Visuals</h4>
+                <p>Professional animations that make learning enjoyable</p>
+            </div>
+
+            <div class="feature-box">
+                <div class="feature-icon">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                        <path d="M15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+                    </svg>
+                </div>
+                <h4>Voice Narration</h4>
+                <p>Listen to explanations as the algorithm executes</p>
+            </div>
+        </div>
+
+        <!-- CTA -->
+        <div class="cta-container">
+            <h2>Ready to Start?</h2>
+            <p>Jump right in and create your first visualization</p>
+            <a href="app.html" class="cta-button">
+                <!-- <span>✨</span> -->
+                Launch Visualizer
+            </a>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeSculptor - Algorithm Visualizer</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/advanced-viz.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+</head>
+
+<body>
+    <!-- Professional Header -->
+    <header class="app-header">
+        <div class="header-content">
+            <div class="logo-section">
+                <a href="index.html" class="logo">CodeSculptor</a>
+                <span class="tagline">Algorithm Visualizer</span>
+            </div>
+            <nav class="header-nav">
+                <a href="examples.html" class="nav-link">Examples</a>
+                <a href="get-started.html" class="nav-link">Guide</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main App Container -->
+    <main class="app-container">
+        <!-- Input Card -->
+        <div class="input-card">
+            <div class="card-header">
+                <h2>Ask Anything</h2>
+                <p class="card-subtitle">Enter any question, scenario, or algorithm in any language</p>
+            </div>
+            <div class="card-body">
+                <!-- Configuration Panel -->
+                <div class="config-panel"
+                    style="margin-bottom: 15px; display: flex; gap: 20px; align-items: center; padding: 10px; background: rgba(0,0,0,0.05); border-radius: 8px; border: 1px solid rgba(0,0,0,0.1);">
+                    <div class="config-item" style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="accuracyToggle" style="width: 16px; height: 16px;" checked>
+                        <label for="accuracyToggle"><strong>High Accuracy (Gemini AI)</strong></label>
+                    </div>
+                </div>
+
+                <!-- Test Case Section -->
+                <div id="testCaseSection" style="margin-bottom: 15px; display: none;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <label style="font-weight: 600;">Test Cases</label>
+                        <button id="addTestCaseBtn" class="btn btn-secondary"
+                            style="padding: 4px 10px; font-size: 0.8rem;">+ Add Custom</button>
+                    </div>
+                    <div id="testCaseList" style="display: flex; flex-direction: column; gap: 8px;">
+                        <!-- Test cases will be injected here -->
+                    </div>
+                </div>
+
+                <textarea id="naturalLanguageInput" class="algorithm-input"
+                    placeholder="Example: Explain the principle of a DC Motor OR Solve the Two Sum problem"
+                    rows="4"></textarea>
+                <div class="action-buttons">
+                    <button id="convertBtn" class="btn btn-primary btn-large">
+                        <!-- <span class="btn-icon"></span> -->
+                        Generate Visualization
+                    </button>
+                    <button id="clearBtn" class="btn btn-secondary btn-large">
+                        <span class="btn-icon">🗑️</span>
+                        Clear
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingSpinner" class="loading-state" style="display: none;">
+            <div class="spinner"></div>
+            <p>Generating visualization...</p>
+        </div>
+
+        <!-- Visualization Container -->
+        <div id="sideBySideContainer" class="visualization-container" style="display: none;">
+            <!-- Control Panel -->
+            <div class="control-panel" id="animationControls">
+                <div class="control-group">
+                    <button id="prevBtn" class="control-btn" title="Previous Step">
+                        <span>⏮️</span>
+                    </button>
+                    <button id="playBtn" class="control-btn">
+                        <span>▶️</span> Play
+                    </button>
+                    <button id="pauseBtn" class="control-btn" disabled>
+                        <span>⏸️</span> Pause
+                    </button>
+                    <button id="nextBtn" class="control-btn" title="Next Step">
+                        <span>⏭️</span>
+                    </button>
+                    <button id="resetBtn" class="control-btn">
+                        <span>🔄</span> Reset
+                    </button>
+                </div>
+                <div class="control-group">
+                    <div class="speed-control" style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 0.8rem; opacity: 0.8;">Speed:</span>
+                        <input type="range" id="speedSlider" min="0.5" max="2.5" step="0.1" value="1.5"
+                            style="width: 80px;">
+                        <span id="speedValue" style="font-size: 0.8rem; width: 30px;">1.5x</span>
+                    </div>
+                    <label class="voice-toggle">
+                        <input type="checkbox" id="voiceToggle">
+                        <span class="toggle-slider"></span>
+                        <span class="toggle-label">🔊 Voice</span>
+                    </label>
+                    <button id="exportBtn" class="control-btn" title="Export as Image/GIF">
+                        <span>💾</span> Export
+                    </button>
+                </div>
+            </div>
+
+            <!-- Side by Side Panels -->
+            <div class="panels-wrapper">
+                <!-- Left: Animation Panel -->
+                <div class="panel animation-panel">
+                    <div class="panel-header">
+                        <h3>Animation</h3>
+                    </div>
+                    <div id="visualizerDisplay" class="panel-content">
+                        <!-- Visualization renders here -->
+                    </div>
+                </div>
+
+                <!-- Right: Content Panel -->
+                <div class="panel right-panel">
+                    <div class="tabs">
+                        <button class="tab-btn active" data-tab="pseudocode">Pseudocode</button>
+                        <button class="tab-btn" data-tab="explanation">AI Explanation</button>
+                    </div>
+                    <div id="pseudocodeTab" class="tab-content active">
+                        <div id="pseudocodeDisplay" class="panel-content pseudocode-content">
+                            <p class="placeholder">Your pseudocode will appear here...</p>
+                        </div>
+                    </div>
+                    <div id="explanationTab" class="tab-content" style="display: none;">
+                        <div id="explanationDisplay" class="panel-content explanation-content"
+                            style="padding: 15px; line-height: 1.6; color: #333; overflow-y: auto; max-height: 400px;">
+                            <p class="placeholder">Algorithm explanation will appear here...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error Message -->
+        <div id="errorMessage" class="error-banner" style="display: none;"></div>
+    </main>
+
+    <script src="js/storage-manager.js"></script>
+    <script src="js/voice-narrator.js"></script>
+    <!-- Mermaid for Diagrams -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({
+            startOnLoad: false,
+            theme: 'dark',
+            themeVariables: {
+                primaryColor: '#00ffee',
+                primaryTextColor: '#fff',
+                lineColor: '#f3f4f4',
+                secondaryColor: '#1a2a2a',
+                tertiaryColor: '#0d1117'
+            }
+        });
+    </script>
+
+    <script src="js/advanced-renderer.js"></script>
+    <script src="js/animation-engine.js"></script>
+    <script src="js/nlp-handler.js"></script>
+    <script src="js/main.js"></script>
+</body>
+
+</html>
