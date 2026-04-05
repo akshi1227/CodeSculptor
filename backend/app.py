@@ -1,3 +1,6 @@
+import sys
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import os
