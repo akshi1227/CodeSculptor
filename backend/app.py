@@ -11,6 +11,14 @@ from pathlib import Path
 from algorithm_visualizer import detect_algorithm_type, generate_visualization_steps, generate_algorithm_pseudocode
 from input_parser import InputParser
 from advanced_visualizer import AdvancedVisualizer
+import re
+
+def extract_section(text, section_name):
+    pattern = rf"{section_name}:(.*?)(?=(?:PSEUDOCODE|DIAGRAM|EXPLANATION|EXPLANATION_WHY|COMPLEXITY|COMPARISON|REAL_WORLD_MAP|AI_HINTS):|$)"
+    match = re.search(pattern, text, re.DOTALL | re.IGNORECASE)
+    if match:
+        return match.group(1).strip()
+    return ""
 
 # Load .env from the backend directory - FORCE OVERRIDE
 env_path = Path(__file__).parent / '.env'
@@ -77,10 +85,15 @@ def convert_to_pseudocode():
         1. LANGUAGE: Always respond in the language used by the user.
         2. PROGRAMMING: If the query is about an algorithm, provide optimized PSEUDOCODE.
         3. GENERAL SUBJECTS: If not programming, provide a step-by-step LOGICAL FLOW in the PSEUDOCODE section.
-        4. DIAGRAM: ALWAYS provide a Mermaid.js diagram (graph TD, sequenceDiagram, etc.) that visualizes the concept.
-        5. EXPLANATION: Provide a detailed, clear EXPLANATION.
+        4. DIAGRAM: ALWAYS provide a Mermaid.js diagram that visualizes the concept.
+        5. EXPLANATION: Provide a detailed, clear EXPLANATION of steps.
+        6. EXPLANATION_WHY: Explain the decision-making process (Why this algorithm/approach?).
+        7. COMPLEXITY: Time and Space complexity (e.g. O(n), O(1)).
+        8. COMPARISON: A Markdown table comparing this algorithm against common alternatives.
+        9. REAL_WORLD_MAP: A single sentence on a real-world application (e.g. "Amazon delivery route optimization").
+        10. AI_HINTS: Short strategic hint (e.g. "Try using dynamic programming").
 
-        RESPONSE FORMAT (MANDATORY):
+        RESPONSE FORMAT (MANDATORY EXACT HEADERS):
         PSEUDOCODE:
         [Numbered steps or logical flow]
 
@@ -89,53 +102,58 @@ def convert_to_pseudocode():
 
         EXPLANATION:
         [Detailed explanation here]
+
+        EXPLANATION_WHY:
+        [Decision making context]
+
+        COMPLEXITY:
+        [Time and Space Complexity, e.g. "Time: O(n), Space: O(1) - Linear"]
+
+        COMPARISON:
+        [Markdown table]
+
+        REAL_WORLD_MAP:
+        [Real world scenario]
+
+        AI_HINTS:
+        [Hint]
         """
         
-        pseudocode = ""
-        explanation = ""
-        diagram = ""
+        parsed_data = {
+            "pseudocode": "",
+            "explanation": "",
+            "diagram": "",
+            "explanation_why": "",
+            "complexity": "",
+            "comparison": "",
+            "real_world_map": "",
+            "ai_hints": ""
+        }
         demo_mode = False
 
         # Try Gemini first
         if gemini_model:
             try:
                 print(f"🤖 Calling Gemini API (Flash Mode)...")
-                prompt = f"{system_prompt}\n\nUser Query: {natural_language}\n\nRespond in the EXACT format:\nPSEUDOCODE:\n[steps]\n\nDIAGRAM:\n[mermaid code]\n\nEXPLANATION:\n[details]"
+                prompt = f"{system_prompt}\n\nUser Query: {natural_language}\n\nRespond strictly following the mandatory headers."
                 response = gemini_model.generate_content(prompt)
                 full_response = response.text
                 print(f"✅ Gemini response received ({len(full_response)} chars)")
                 
-                # Robust parsing for Mermaid and other fields
-                if "DIAGRAM:" in full_response:
-                    parts = full_response.split("DIAGRAM:")
-                    # Parse Pseudocode (everything before DIAGRAM:)
-                    pseudocode_part = parts[0].replace("PSEUDOCODE:", "").strip()
-                    pseudocode = pseudocode_part
-                    
-                    # Parse Diagram and Explanation
-                    after_diagram = parts[1]
-                    if "EXPLANATION:" in after_diagram:
-                        diag_parts = after_diagram.split("EXPLANATION:")
-                        diagram = diag_parts[0].strip()
-                        explanation = diag_parts[1].strip()
-                    else:
-                        diagram = after_diagram.strip()
-                        explanation = "No detailed explanation provided."
-                
-                # Cleanup Mermaid markers
-                diagram = diagram.replace("```mermaid", "").replace("```", "").strip()
-                
-                # Secondary check if above failed
-                if not pseudocode and "PSEUDOCODE:" in full_response:
-                    pseudocode = full_response.split("PSEUDOCODE:")[1].split("DIAGRAM:")[0].split("EXPLANATION:")[0].strip()
-                if not explanation and "EXPLANATION:" in full_response:
-                    explanation = full_response.split("EXPLANATION:")[1].strip()
+                parsed_data["pseudocode"] = extract_section(full_response, "PSEUDOCODE")
+                parsed_data["diagram"] = extract_section(full_response, "DIAGRAM").replace("```mermaid", "").replace("```", "").strip()
+                parsed_data["explanation"] = extract_section(full_response, "EXPLANATION")
+                parsed_data["explanation_why"] = extract_section(full_response, "EXPLANATION_WHY")
+                parsed_data["complexity"] = extract_section(full_response, "COMPLEXITY")
+                parsed_data["comparison"] = extract_section(full_response, "COMPARISON")
+                parsed_data["real_world_map"] = extract_section(full_response, "REAL_WORLD_MAP")
+                parsed_data["ai_hints"] = extract_section(full_response, "AI_HINTS")
 
             except Exception as e:
                 print(f"⚠️ Gemini error during generation: {e}")
 
         # Fallback to Groq if Gemini failed or is missing
-        if not pseudocode and groq_client:
+        if not parsed_data["pseudocode"] and groq_client:
             try:
                 print("🤖 Calling Groq API (Fallback)...")
                 response = groq_client.chat.completions.create(
@@ -150,64 +168,36 @@ def convert_to_pseudocode():
                 full_response = response.choices[0].message.content
                 print(f"✅ Groq response received ({len(full_response)} chars)")
                 
-                # Robust parsing for Mermaid and other fields (same as Gemini)
-                if "DIAGRAM:" in full_response:
-                    parts = full_response.split("DIAGRAM:")
-                    # Parse Pseudocode (everything before DIAGRAM:)
-                    pseudocode_part = parts[0].replace("PSEUDOCODE:", "").strip()
-                    pseudocode = pseudocode_part
-                    
-                    # Parse Diagram and Explanation
-                    after_diagram = parts[1]
-                    if "EXPLANATION:" in after_diagram:
-                        diag_parts = after_diagram.split("EXPLANATION:")
-                        diagram = diag_parts[0].strip()
-                        explanation = diag_parts[1].strip()
-                    else:
-                        diagram = after_diagram.strip()
-                        explanation = "No detailed explanation provided."
-                
-                # Cleanup Mermaid markers
-                diagram = diagram.replace("```mermaid", "").replace("```", "").strip()
-
-                # Secondary check if above failed
-                if not pseudocode and "PSEUDOCODE:" in full_response:
-                    # Attempt to parse pseudocode if it wasn't found via DIAGRAM split
-                    # This handles cases where DIAGRAM might be missing or malformed, but PSEUDOCODE is present
-                    pseudocode_start = full_response.find("PSEUDOCODE:")
-                    diagram_start = full_response.find("DIAGRAM:")
-                    explanation_start = full_response.find("EXPLANATION:")
-
-                    if pseudocode_start != -1:
-                        end_index = len(full_response)
-                        if diagram_start != -1 and diagram_start > pseudocode_start:
-                            end_index = min(end_index, diagram_start)
-                        if explanation_start != -1 and explanation_start > pseudocode_start:
-                            end_index = min(end_index, explanation_start)
-                        pseudocode = full_response[pseudocode_start + len("PSEUDOCODE:"):end_index].strip()
-
-                if not explanation and "EXPLANATION:" in full_response:
-                    # Attempt to parse explanation if it wasn't found via DIAGRAM split
-                    explanation_start = full_response.find("EXPLANATION:")
-                    if explanation_start != -1:
-                        explanation = full_response[explanation_start + len("EXPLANATION:"):].strip()
+                parsed_data["pseudocode"] = extract_section(full_response, "PSEUDOCODE")
+                parsed_data["diagram"] = extract_section(full_response, "DIAGRAM").replace("```mermaid", "").replace("```", "").strip()
+                parsed_data["explanation"] = extract_section(full_response, "EXPLANATION")
+                parsed_data["explanation_why"] = extract_section(full_response, "EXPLANATION_WHY")
+                parsed_data["complexity"] = extract_section(full_response, "COMPLEXITY")
+                parsed_data["comparison"] = extract_section(full_response, "COMPARISON")
+                parsed_data["real_world_map"] = extract_section(full_response, "REAL_WORLD_MAP")
+                parsed_data["ai_hints"] = extract_section(full_response, "AI_HINTS")
 
             except Exception as e:
                 print(f"⚠️ Groq error during generation: {e}")
 
         # Ultimate fallback
-        if not pseudocode:
+        if not parsed_data["pseudocode"]:
             print("🎭 AI failed. Using built-in templates (Demo Mode)")
             demo_mode = True
             algo_type = detect_algorithm_type(natural_language)
-            pseudocode = generate_algorithm_pseudocode(algo_type, natural_language)
-            explanation = "Unable to connect to AI providers. Showing a conceptual template instead."
+            parsed_data["pseudocode"] = generate_algorithm_pseudocode(algo_type, natural_language)
+            parsed_data["explanation"] = "Unable to connect to AI providers. Showing a conceptual template instead."
+            parsed_data["explanation_why"] = "Why: Fallback mode does not generate dynamic reasoning."
+            parsed_data["complexity"] = f"Complexity Data Unavailable."
+            parsed_data["comparison"] = "Algorithm comparison unavailable in offline mode."
+            parsed_data["real_world_map"] = "Offline Mode: Real world scenario not generated."
+            parsed_data["ai_hints"] = "Hint: Please configure an API key for dynamic content."
             if "DC motor" in natural_language.lower():
-                diagram = "graph TD\n    A[DC Power] --> B[Commutator]\n    B --> C[Armature/Rotor]\n    C --> D[Magnetic Field interaction]\n    D --> E[Rotational Force/Torque]"
+                parsed_data["diagram"] = "graph TD\n    A[DC Power] --> B[Commutator]\n    B --> C[Armature/Rotor]\n    C --> D[Magnetic Field interaction]\n    D --> E[Rotational Force/Torque]"
 
         # Parse pseudocode into steps for animation
         # Ensure we don't have empty lists or markdown markers
-        lines = [l.strip() for l in pseudocode.split('\n') if l.strip() and "```" not in l]
+        lines = [l.strip() for l in parsed_data["pseudocode"].split('\n') if l.strip() and "```" not in l]
         steps = []
         for i, line in enumerate(lines):
             steps.append({
@@ -244,22 +234,21 @@ def convert_to_pseudocode():
         print(f"🔍 Generated Visualization Type: {visualization.get('visualization_type')}")
         
         # If we have a mermaid diagram and it's a generic/conceptual query, use mermaid viz
-        if diagram and visualization.get('visualization_type') in ['conceptual', 'generic']:
+        if parsed_data["diagram"] and visualization.get('visualization_type') in ['conceptual', 'generic']:
             print("🎨 Injecting Mermaid diagram as primary visualization")
             visualization['visualization_type'] = 'mermaid'
             for step in visualization.get('steps', []):
-                step['diagram'] = diagram
-        elif diagram:
+                step['diagram'] = parsed_data["diagram"]
+        elif parsed_data["diagram"]:
             # For specific visualizers, just attach the diagram to the first step as extra info
             print("🎨 Attaching Mermaid diagram as extra info to first step")
             if visualization.get('steps'):
-                visualization['steps'][0]['diagram'] = diagram
+                visualization['steps'][0]['diagram'] = parsed_data["diagram"]
 
+        # Ensure we provide a clean response dictionary
         return jsonify({
             "success": True,
-            "pseudocode": pseudocode,
-            "explanation": explanation,
-            "diagram": diagram,
+            **parsed_data,
             "steps": steps,
             "visualization": visualization,
             "input": natural_language,

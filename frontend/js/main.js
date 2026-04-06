@@ -31,7 +31,16 @@ class CodeSculptor {
 
         // New Controls
         this.accuracyToggle = document.getElementById('accuracyToggle');
+        this.interactiveModeToggle = document.getElementById('interactiveModeToggle');
         this.explanationDisplay = document.getElementById('explanationDisplay');
+        this.explanationWhyDisplay = document.getElementById('explanationWhyDisplay');
+        this.analysisTab = document.getElementById('analysisTab');
+        this.complexityText = document.getElementById('complexityText');
+        this.comparisonTableDisplay = document.getElementById('comparisonTableDisplay');
+        this.aiIntelligenceWidget = document.getElementById('aiIntelligenceWidget');
+        this.aiHintText = document.getElementById('aiHintText');
+        this.realWorldText = document.getElementById('realWorldText');
+        
         this.tabBtns = document.querySelectorAll('.tab-btn');
         this.pseudocodeTab = document.getElementById('pseudocodeTab');
         this.explanationTab = document.getElementById('explanationTab');
@@ -105,6 +114,45 @@ class CodeSculptor {
 
                 this.displayPseudocode(result.steps, result.complexity);
                 this.displayExplanation(result.explanation);
+                
+                // Display new fields
+                if (this.explanationWhyDisplay) this.explanationWhyDisplay.innerHTML = result.explanation_why || "Data unavailable";
+                if (this.complexityText) this.complexityText.innerText = result.complexity || "Data unavailable";
+                
+                // Render Markdown Table to HTML safely
+                let compHtml = result.comparison || "<p>Data unavailable</p>";
+                if (compHtml.includes("|")) {
+                    // Quick and dirty markdown table to HTML converter
+                    let rows = compHtml.split("\\n").filter(r => r.includes("|"));
+                    if (rows.length > 1) {
+                        let table = '<table style="width:100%; border-collapse: collapse; margin-top:10px;">';
+                        rows.forEach((row, i) => {
+                            if (row.includes("---")) return;
+                            let cls = i === 0 ? "background:#f1f5f9; font-weight:bold;" : "";
+                            let tag = i === 0 ? "th" : "td";
+                            table += `<tr style="${cls} border-bottom: 1px solid #ccc;">`;
+                            let cols = row.split("|").filter(c => c.trim() !== "");
+                            cols.forEach(c => table += `<${tag} style="padding:8px; border:1px solid #ddd;">${c.trim()}</${tag}>`);
+                            table += '</tr>';
+                        });
+                        table += '</table>';
+                        compHtml = table;
+                    }
+                }
+                if (this.comparisonTableDisplay) this.comparisonTableDisplay.innerHTML = compHtml;
+
+                // AI Intelligence Widget Update
+                if (this.aiIntelligenceWidget && result.ai_hints && result.real_world_map) {
+                    this.aiHintText.innerText = result.ai_hints;
+                    this.realWorldText.innerText = result.real_world_map;
+                    this.aiIntelligenceWidget.style.display = 'block';
+                }
+
+                // Plot Complexity Chart if Chart.js is loaded
+                if (window.Chart && this.complexityText) {
+                    this.renderComplexityChart(result.algorithm || "Algorithm", result.complexity || "O(n)");
+                }
+
                 this.displayTestCases(result.algorithm?.toLowerCase().replace(/ /g, '_'), result);
                 this.animationEngine.loadSteps(result.steps, result.visualization);
                 this.controls.style.display = 'flex';
@@ -233,11 +281,17 @@ class CodeSculptor {
         });
 
         if (tabName === 'pseudocode') {
-            this.pseudocodeTab.style.display = 'block';
-            this.explanationTab.style.display = 'none';
-        } else {
-            this.pseudocodeTab.style.display = 'none';
-            this.explanationTab.style.display = 'block';
+            if(this.pseudocodeTab) this.pseudocodeTab.style.display = 'block';
+            if(this.explanationTab) this.explanationTab.style.display = 'none';
+            if(this.analysisTab) this.analysisTab.style.display = 'none';
+        } else if (tabName === 'explanation') {
+            if(this.pseudocodeTab) this.pseudocodeTab.style.display = 'none';
+            if(this.explanationTab) this.explanationTab.style.display = 'block';
+            if(this.analysisTab) this.analysisTab.style.display = 'none';
+        } else if (tabName === 'analysis') {
+            if(this.pseudocodeTab) this.pseudocodeTab.style.display = 'none';
+            if(this.explanationTab) this.explanationTab.style.display = 'none';
+            if(this.analysisTab) this.analysisTab.style.display = 'block';
         }
     }
 
@@ -266,7 +320,80 @@ class CodeSculptor {
     }
 
     handleNext() {
-        this.animationEngine.nextStep();
+        if (this.interactiveModeToggle && this.interactiveModeToggle.checked) {
+            // Briefly pause and ask
+            this.handlePause();
+            const predict = prompt("Interactive Learning Mode: What do you think happens in the next step?");
+            if (predict !== null) {
+                // We don't judge the answer yet, just force them to think
+                alert("Let's see if you're right!");
+                this.animationEngine.nextStep();
+            }
+        } else {
+            this.animationEngine.nextStep();
+        }
+    }
+
+    renderComplexityChart(algoName, complexityStr) {
+        const ctx = document.getElementById('complexityChart');
+        if (!ctx) return;
+        
+        ctx.style.display = 'block';
+        
+        if (this.currentChart) {
+            this.currentChart.destroy();
+        }
+
+        const labels = [10, 50, 100, 500, 1000];
+        let data = [];
+        let label = 'Complexity';
+
+        const compStr = complexityStr.toLowerCase();
+        if (compStr.includes('o(1)')) {
+            data = labels.map(() => 1);
+            label = 'O(1) - Constant';
+        } else if (compStr.includes('o(log n)')) {
+            data = labels.map(n => Math.log2(n));
+            label = 'O(log n) - Logarithmic';
+        } else if (compStr.includes('o(n log n)')) {
+            data = labels.map(n => n * Math.log2(n));
+            label = 'O(n log n) - Linearithmic';
+        } else if (compStr.includes('o(n2)') || compStr.includes('o(n^2)') || compStr.includes('o(n²)')) {
+            data = labels.map(n => n * n);
+            label = 'O(n²) - Quadratic';
+        } else {
+            // Default O(n)
+            data = labels.map(n => n);
+            label = 'O(n) - Linear';
+        }
+
+        this.currentChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: \`\${algoName} Time Complexity (\${label})\`,
+                    data: data,
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: {
+                        title: { display: true, text: 'Input Size (n)' }
+                    },
+                    y: {
+                        title: { display: true, text: 'Operations' },
+                        ticks: { display: false } // Hide exact numbers for abstract complexity
+                    }
+                }
+            }
+        });
     }
 
     handleSpeedChange() {
