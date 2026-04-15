@@ -1,0 +1,133 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+body {
+  height: 100vh;
+  background: linear-gradient(135deg, #6c7bff, #4b5cff);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* MAIN CARD */
+.card {
+  width: 800px;
+  display: flex;
+  border-radius: 20px;
+  overflow: hidden;
+  backdrop-filter: blur(20px);
+  background: rgba(255,255,255,0.1);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+}
+
+/* LEFT SIDE */
+.left {
+  flex: 1;
+  padding: 40px;
+}
+
+.left h2 {
+  margin-bottom: 20px;
+  color: white;
+}
+
+/* ERROR MESSAGE */
+.error-message {
+  background: rgba(255, 59, 48, 0.9);
+  color: white;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  display: none;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.left input {
+  width: 100%;
+  padding: 14px;
+  margin: 10px 0;
+  border-radius: 30px;
+  border: none;
+  outline: none;
+}
+
+/* RIGHT SIDE */
+.right {
+  flex: 1;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* MAIN BUTTON */
+.main-btn {
+  padding: 14px;
+  border-radius: 30px;
+  border: none;
+  background: black;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  margin-bottom: 15px;
+}
+
+/* SWITCH TEXT */
+#switchText {
+  color: white;
+  font-size: 14px;
+}
+
+#switchText span {
+  cursor: pointer;
+  font-weight: bold;
+}
+
+/* DIVIDER */
+.divider {
+  text-align: center;
+  margin: 15px 0;
+  color: white;
+}
+
+/* SOCIAL BUTTONS */
+.social {
+  padding: 12px;
+  border-radius: 30px;
+  margin: 5px 0;
+  border: none;
+  cursor: pointer;
+}
+
+.google {
+  background: white;
+}
+
+.facebook {
+  background: #3b5998;
+  color: white;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .card {
+    flex-direction: column;
+    width: 90%;
+  }
+}

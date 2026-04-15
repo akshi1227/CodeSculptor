@@ -9,6 +9,39 @@ class CodeSculptor {
         this.initializeElements();
         this.attachEventListeners();
         this.loadPreviousSession();
+        this.ensureUIReady();
+    }
+
+    ensureUIReady() {
+        console.log('CodeSculptor UI initialized successfully.');
+
+        const missing = [];
+        [
+            'input', 'convertBtn', 'clearBtn', 'playBtn', 'pauseBtn', 'resetBtn',
+            'prevBtn', 'nextBtn', 'speedSlider', 'speedValue', 'exportBtn',
+            'voiceToggle', 'display', 'loading', 'errorMsg', 'controls',
+            'explanationDisplay', 'codeDisplay', 'languageSelect'
+        ].forEach(name => {
+            if (!this[name]) missing.push(name);
+        });
+
+        if (missing.length) {
+            console.error('Missing UI elements:', missing);
+            if (this.errorMsg) {
+                this.errorMsg.textContent = 'UI initialization error: missing elements. Please refresh the page.';
+                this.errorMsg.style.display = 'block';
+            }
+            if (this.convertBtn) {
+                this.convertBtn.disabled = true;
+            }
+        } else {
+            this.nlpHandler.checkHealth().then(healthy => {
+                if (!healthy && this.errorMsg) {
+                    this.errorMsg.textContent = 'Backend not reachable. Start the Flask server and reload the page.';
+                    this.errorMsg.style.display = 'block';
+                }
+            });
+        }
     }
 
     initializeElements() {
@@ -43,6 +76,9 @@ class CodeSculptor {
         
         this.tabBtns = document.querySelectorAll('.tab-btn');
         this.pseudocodeTab = document.getElementById('pseudocodeTab');
+        this.codeTab = document.getElementById('codeTab');
+        this.codeDisplay = document.getElementById('codeDisplay');
+        this.languageSelect = document.getElementById('languageSelect');
         this.explanationTab = document.getElementById('explanationTab');
         this.testCaseSection = document.getElementById('testCaseSection');
         this.testCaseList = document.getElementById('testCaseList');
@@ -79,6 +115,7 @@ class CodeSculptor {
 
     async handleConvert() {
         const text = this.input.value.trim();
+        const startTime = Date.now(); // Track start time for duration
 
         if (!text) {
             this.showError('Please enter a natural language description!');
@@ -97,6 +134,8 @@ class CodeSculptor {
 
         try {
             const highAccuracy = this.accuracyToggle ? this.accuracyToggle.checked : false;
+            const selectedLanguage = this.languageSelect ? this.languageSelect.value : 'pseudocode';
+            const selectedDomain = 'general';
 
             if (highAccuracy) {
                 this.loading.querySelector('p').textContent = "Generating with Gemini AI (High Accuracy)...";
@@ -104,7 +143,14 @@ class CodeSculptor {
                 this.loading.querySelector('p').textContent = "Generating visualization...";
             }
 
-            const result = await this.nlpHandler.convertToPseudocode(text, highAccuracy);
+            const healthOk = await this.nlpHandler.checkHealth();
+            if (!healthOk) {
+                throw new Error('Backend health check failed. Is the Flask server running on http://127.0.0.1:5000 ?');
+            }
+
+            const result = await this.nlpHandler.convertToPseudocode(text, highAccuracy, selectedLanguage, selectedDomain);
+            
+            console.log('Convert result:', result);
 
             if (result.success) {
                 // Show side-by-side container
@@ -113,6 +159,7 @@ class CodeSculptor {
                 }
 
                 this.displayPseudocode(result.steps, result.complexity);
+                this.displayCode(result.code, result.language);
                 this.displayExplanation(result.explanation);
                 
                 // Display new fields
@@ -153,7 +200,7 @@ class CodeSculptor {
                     this.renderComplexityChart(result.algorithm || "Algorithm", result.complexity || "O(n)");
                 }
 
-                this.displayTestCases(result.algorithm?.toLowerCase().replace(/ /g, '_'), result);
+                this.displayTestCases((result.algorithm || '').toLowerCase().replace(/ /g, '_'), result);
                 this.animationEngine.loadSteps(result.steps, result.visualization);
                 this.controls.style.display = 'flex';
 
@@ -169,6 +216,59 @@ class CodeSculptor {
                     timestamp: new Date().toISOString()
                 });
 
+                // Add to MongoDB activity history
+                if (result.success) {
+                    const endTime = Date.now();
+                    const duration = endTime - startTime;
+                    
+                    // Save ALL data including AI-generated content
+                    const historyData = {
+                        input: text,
+                        pseudocode: result.pseudocode,
+                        generated_code: result.code,
+                        language: result.language || selectedLanguage,
+                        duration: duration,
+                        timestamp: new Date().toISOString(),
+                        // Additional AI data for full reload
+                        complexity: result.complexity,
+                        explanation: result.explanation,
+                        explanation_why: result.explanation_why,
+                        ai_hints: result.ai_hints,
+                        real_world_map: result.real_world_map,
+                        comparison: result.comparison,
+                        algorithm: result.algorithm,
+                        steps: result.steps,
+                        visualization: result.visualization
+                    };
+                    
+                    console.log('Saving to MongoDB history:', historyData);
+                    
+                    // Send to MongoDB via API
+                    fetch('http://localhost:5000/api/save-history', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem('auth_token') || ''}`
+                        },
+                        body: JSON.stringify(historyData)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            console.log('MongoDB: History saved successfully');
+                            // Reload history display
+                            if (window.mongoDBHistory) {
+                                window.mongoDBHistory.loadHistory();
+                            }
+                        } else {
+                            console.error('MongoDB: Failed to save history:', data.error);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('MongoDB: Error saving history:', error);
+                    });
+                }
+
                 // Auto-play animation
                 setTimeout(() => this.handlePlay(), 500);
             } else {
@@ -180,6 +280,76 @@ class CodeSculptor {
         } finally {
             this.showLoading(false);
         }
+    }
+    
+    reloadFromHistory(result) {
+        console.log('Reloading from history:', result);
+        
+        // Show side-by-side container
+        const sideBySideContainer = document.getElementById('sideBySideContainer');
+        if (sideBySideContainer) {
+            sideBySideContainer.style.display = 'grid';
+        }
+        
+        // Display all the components
+        this.displayPseudocode(result.steps || [], result.complexity);
+        this.displayCode(result.code, result.language);
+        this.displayExplanation(result.explanation);
+        
+        // Update explanation why
+        if (this.explanationWhyDisplay && result.explanation_why) {
+            this.explanationWhyDisplay.innerHTML = `
+                <div style="padding: 16px; background: rgba(99,102,241,0.1); border-radius: 8px; border-left: 3px solid #6366f1;">
+                    <h4 style="margin: 0 0 10px 0; color: #e0e8f0;">Why This Approach?</h4>
+                    <p style="margin: 0; color: rgba(224,232,240,0.9); line-height: 1.6;">${result.explanation_why}</p>
+                </div>
+            `;
+        }
+        
+        // Update complexity display
+        if (this.complexityText && result.complexity) {
+            this.complexityText.innerHTML = `<span class="complexity-badge">${result.complexity}</span>`;
+        }
+        
+        // Update comparison table
+        if (this.comparisonTableDisplay && result.comparison) {
+            let compHtml = `<div style="padding:12px; background:rgba(0,0,0,0.2); border-radius:6px;"><pre style="margin:0; white-space:pre-wrap; font-family:inherit; font-size:0.9rem;">${result.comparison}</pre></div>`;
+            if (result.comparison.includes("|")) {
+                let rows = result.comparison.split("\n").map(r => r.trim()).filter(r => r && !r.startsWith("+"));
+                let table = '<table style="width:100%; border-collapse:collapse; font-size:0.85rem; margin-top:8px;">';
+                rows.forEach((row, i) => {
+                    if (row.includes("---")) return;
+                    let cls = i === 0 ? "background:#f1f5f9; font-weight:bold;" : "";
+                    let tag = i === 0 ? "th" : "td";
+                    table += `<tr style="${cls} border-bottom: 1px solid #ccc;">`;
+                    let cols = row.split("|").filter(c => c.trim() !== "");
+                    cols.forEach(c => table += `<${tag} style="padding:8px; border:1px solid #ddd;">${c.trim()}</${tag}>`);
+                    table += '</tr>';
+                });
+                table += '</table>';
+                compHtml = table;
+            }
+            this.comparisonTableDisplay.innerHTML = compHtml;
+        }
+        
+        // Update AI Intelligence Widget
+        if (this.aiIntelligenceWidget && result.ai_hints && result.real_world_map) {
+            this.aiHintText.innerText = result.ai_hints;
+            this.realWorldText.innerText = result.real_world_map;
+            this.aiIntelligenceWidget.style.display = 'block';
+        }
+        
+        // Load animation
+        this.animationEngine.loadSteps(result.steps || [], result.visualization);
+        this.controls.style.display = 'flex';
+        
+        // Switch to pseudocode tab
+        this.switchTab('pseudocode');
+        
+        // Show controls
+        this.controls.style.display = 'flex';
+        
+        console.log('Reloaded from history successfully');
     }
 
     displayPseudocode(steps, complexity) {
@@ -201,6 +371,50 @@ class CodeSculptor {
             line.textContent = step.content;
             this.display.appendChild(line);
         });
+    }
+
+    displayCode(code, language) {
+        if (!this.codeDisplay) return;
+
+        if (code && language && language !== 'pseudocode') {
+            const langLabel = { python:'Python', javascript:'JavaScript', java:'Java', cpp:'C++' }[language] || language;
+            const langIcon  = { python:'🐍', javascript:'🟨', java:'☕', cpp:'⚙️' }[language] || '💻';
+
+            this.codeDisplay.innerHTML = `
+                <div style="
+                    display:flex; justify-content:space-between; align-items:center;
+                    padding:10px 14px; background:rgba(0,0,0,0.3);
+                    border-bottom:1px solid rgba(255,255,255,0.07);
+                    border-radius:8px 8px 0 0;
+                ">
+                    <span style="font-size:0.8rem;font-weight:600;color:rgba(224,232,240,0.6);display:flex;align-items:center;gap:6px;">
+                        ${langIcon} ${langLabel}
+                    </span>
+                    <button id="copyCodeBtn" onclick="
+                        navigator.clipboard.writeText(this.closest('.panel-content').querySelector('code').textContent);
+                        this.textContent='✓ Copied!'; setTimeout(()=>this.textContent='Copy',2000);
+                    " style="
+                        background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12);
+                        border-radius:6px; padding:3px 10px; font-size:0.75rem; color:rgba(224,232,240,0.7);
+                        cursor:pointer; transition:0.2s;
+                    ">Copy</button>
+                </div>
+                <pre style="
+                    margin:0; padding:16px; overflow-x:auto;
+                    background:#0d1117; border-radius:0 0 8px 8px;
+                    font-family:'Fira Code','SF Mono',monospace;
+                    font-size:0.85rem; line-height:1.7;
+                    color:#c9d1d9;
+                "><code class="language-${language}">${this.escapeHtml(code)}</code></pre>
+            `;
+        } else {
+            this.codeDisplay.innerHTML = '<p class="placeholder" style="padding:2rem;text-align:center;color:rgba(224,224,224,0.4);">Select a programming language above to generate code.</p>';
+        }
+    }
+
+    escapeHtml(str) {
+        return String(str)
+            .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     }
 
     displayExplanation(explanation) {
@@ -273,26 +487,17 @@ class CodeSculptor {
 
     switchTab(tabName) {
         this.tabBtns.forEach(btn => {
-            if (btn.getAttribute('data-tab') === tabName) {
-                btn.classList.add('active');
-            } else {
-                btn.classList.remove('active');
-            }
+            btn.classList.toggle('active', btn.getAttribute('data-tab') === tabName);
         });
 
-        if (tabName === 'pseudocode') {
-            if(this.pseudocodeTab) this.pseudocodeTab.style.display = 'block';
-            if(this.explanationTab) this.explanationTab.style.display = 'none';
-            if(this.analysisTab) this.analysisTab.style.display = 'none';
-        } else if (tabName === 'explanation') {
-            if(this.pseudocodeTab) this.pseudocodeTab.style.display = 'none';
-            if(this.explanationTab) this.explanationTab.style.display = 'block';
-            if(this.analysisTab) this.analysisTab.style.display = 'none';
-        } else if (tabName === 'analysis') {
-            if(this.pseudocodeTab) this.pseudocodeTab.style.display = 'none';
-            if(this.explanationTab) this.explanationTab.style.display = 'none';
-            if(this.analysisTab) this.analysisTab.style.display = 'block';
-        }
+        // Always hide ALL tabs first, then show the selected one
+        const allTabs = [this.pseudocodeTab, this.codeTab, this.explanationTab, this.analysisTab];
+        allTabs.forEach(tab => { if (tab) tab.style.display = 'none'; });
+
+        if      (tabName === 'pseudocode')   { if (this.pseudocodeTab)   this.pseudocodeTab.style.display   = 'block'; }
+        else if (tabName === 'code')         { if (this.codeTab)         this.codeTab.style.display         = 'block'; }
+        else if (tabName === 'explanation')  { if (this.explanationTab)  this.explanationTab.style.display  = 'block'; }
+        else if (tabName === 'analysis')     { if (this.analysisTab)     this.analysisTab.style.display     = 'block'; }
     }
 
     handlePlay() {
@@ -358,9 +563,9 @@ class CodeSculptor {
         } else if (compStr.includes('o(n log n)')) {
             data = labels.map(n => n * Math.log2(n));
             label = 'O(n log n) - Linearithmic';
-        } else if (compStr.includes('o(n2)') || compStr.includes('o(n^2)') || compStr.includes('o(n²)')) {
+        } else if (compStr.includes('o(n2)') || compStr.includes('o(n^2)') || compStr.includes('o(n^2)')) {
             data = labels.map(n => n * n);
-            label = 'O(n²) - Quadratic';
+            label = 'O(n^2) - Quadratic';
         } else {
             // Default O(n)
             data = labels.map(n => n);
@@ -372,7 +577,7 @@ class CodeSculptor {
             data: {
                 labels: labels,
                 datasets: [{
-                    label: \`\${algoName} Time Complexity (\${label})\`,
+                    label: algoName + ' Time Complexity (' + label + ')',
                     data: data,
                     borderColor: '#3b82f6',
                     backgroundColor: 'rgba(59, 130, 246, 0.1)',

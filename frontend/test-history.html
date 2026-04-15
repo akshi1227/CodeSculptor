@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>History Test</title>
+</head>
+<body>
+    <h1>History Debug Test</h1>
+    <button onclick="testAddHistory()">Add Test History</button>
+    <button onclick="showHistory()">Show History</button>
+    <button onclick="clearHistory()">Clear History</button>
+    <div id="output"></div>
+    
+    <script src="js/activity-history.js"></script>
+    <script>
+        function testAddHistory() {
+            if (window.activityHistory) {
+                window.activityHistory.addExecution({
+                    input: "Test algorithm: " + new Date().toLocaleTimeString(),
+                    pseudocode: "function test() { return true; }",
+                    generatedCode: "console.log('test');",
+                    language: "javascript",
+                    duration: 100
+                });
+                console.log('Test history added');
+            } else {
+                console.log('ActivityHistory not available');
+            }
+        }
+        
+        function showHistory() {
+            const user = localStorage.getItem('currentUser');
+            const historyKey = user ? `activity_history_${JSON.parse(user).email}` : 'activity_history_guest';
+            const history = localStorage.getItem(historyKey);
+            
+            document.getElementById('output').innerHTML = `
+                <h3>Current User: ${user}</h3>
+                <h3>History Key: ${historyKey}</h3>
+                <h3>History Data:</h3>
+                <pre>${history ? JSON.stringify(JSON.parse(history), null, 2) : 'No history'}</pre>
+            `;
+        }
+        
+        function clearHistory() {
+            const user = localStorage.getItem('currentUser');
+            const historyKey = user ? `activity_history_${JSON.parse(user).email}` : 'activity_history_guest';
+            localStorage.removeItem(historyKey);
+            console.log('History cleared');
+            showHistory();
+        }
+    </script>
+</body>
+</html>

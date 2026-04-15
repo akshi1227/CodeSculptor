@@ -20,6 +20,9 @@
                 <span class="tagline">Algorithm Visualizer</span>
             </div>
             <nav class="header-nav">
+                <a href="scenario.html" class="nav-link"
+                    style="background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.2);color:#00d4ff;">🧪
+                    Scenario Lab</a>
                 <a href="examples.html" class="nav-link">Examples</a>
                 <a href="get-started.html" class="nav-link">Guide</a>
             </nav>
@@ -42,155 +45,263 @@
                         <input type="checkbox" id="accuracyToggle" style="width: 16px; height: 16px;" checked>
                         <label for="accuracyToggle"><strong>High Accuracy (Gemini AI)</strong></label>
                     </div>
-                    <div class="config-item" style="display: flex; align-items: center; gap: 8px;">
+                    <!-- <div class="config-item" style="display: flex; align-items: center; gap: 8px;">
                         <input type="checkbox" id="interactiveModeToggle" style="width: 16px; height: 16px;">
                         <label for="interactiveModeToggle"><strong>Interactive Learning Mode</strong></label>
+                    </div> -->
+
+                    <div class="config-item" style="display: flex; align-items: center; gap: 8px;">
+                        <label for="languageSelect"><strong>Code Language:</strong></label>
+                        <select id="languageSelect"
+                            style="padding: 4px 8px; border-radius: 4px; border: 1px solid #ccc;">
+                            <option value="pseudocode">Pseudocode Only</option>
+                            <option value="python">Python</option>
+                            <option value="javascript">JavaScript</option>
+                            <option value="java">Java</option>
+                            <option value="cpp">C++</option>
+                        </select>
                     </div>
-                </div>
 
-                <!-- AI Hints & Real World Map Widget (Hidden until generated) -->
-                <div id="aiIntelligenceWidget" style="display: none; margin-bottom: 15px; padding: 12px; background: #f0fdfa; border-left: 4px solid #00ffee; border-radius: 4px;">
-                    <div style="font-weight: bold; color: #0d9488; margin-bottom: 5px;">💡 AI Hint</div>
-                    <div id="aiHintText" style="font-size: 0.9rem; margin-bottom: 10px;"></div>
-                    <div style="font-weight: bold; color: #4f46e5; margin-bottom: 5px;">🌍 Real-World App</div>
-                    <div id="realWorldText" style="font-size: 0.9rem;"></div>
-                </div>
-
-                <!-- Test Case Section -->
-                <div id="testCaseSection" style="margin-bottom: 15px; display: none;">
-                    <div
-                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                        <label style="font-weight: 600;">Test Cases</label>
-                        <button id="addTestCaseBtn" class="btn btn-secondary"
-                            style="padding: 4px 10px; font-size: 0.8rem;">+ Add Custom</button>
+                    <!-- AI Hints & Real World Map Widget (Hidden until generated) -->
+                    <div id="aiIntelligenceWidget"
+                        style="display: none; margin-bottom: 15px; padding: 12px; background: #f0fdfa; border-left: 4px solid #00ffee; border-radius: 4px;">
+                        <div style="font-weight: bold; color: #0d9488; margin-bottom: 5px;">💡 AI Hint</div>
+                        <div id="aiHintText" style="font-size: 0.9rem; margin-bottom: 10px;"></div>
+                        <div style="font-weight: bold; color: #4f46e5; margin-bottom: 5px;">🌍 Real-World App</div>
+                        <div id="realWorldText" style="font-size: 0.9rem;"></div>
                     </div>
-                    <div id="testCaseList" style="display: flex; flex-direction: column; gap: 8px;">
-                        <!-- Test cases will be injected here -->
+
+                    <!-- Test Case Section -->
+                    <div id="testCaseSection" style="margin-bottom: 15px; display: none;">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <label style="font-weight: 600;">Test Cases</label>
+                            <button id="addTestCaseBtn" type="button" class="btn btn-secondary"
+                                style="padding: 4px 10px; font-size: 0.8rem;">+ Add Custom</button>
+                        </div>
+                        <div id="testCaseList" style="display: flex; flex-direction: column; gap: 8px;">
+                            <!-- Test cases will be injected here -->
+                        </div>
                     </div>
-                </div>
 
-                <textarea id="naturalLanguageInput" class="algorithm-input"
-                    placeholder="Example: Explain the principle of a DC Motor OR Solve the Two Sum problem"
-                    rows="4"></textarea>
-                <div class="action-buttons">
-                    <button id="convertBtn" class="btn btn-primary btn-large">
-                        <!-- <span class="btn-icon"></span> -->
-                        Generate Visualization
-                    </button>
-                    <button id="clearBtn" class="btn btn-secondary btn-large">
-                        <span class="btn-icon">🗑️</span>
-                        Clear
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Loading State -->
-        <div id="loadingSpinner" class="loading-state" style="display: none;">
-            <div class="spinner"></div>
-            <p>Generating visualization...</p>
-        </div>
-
-        <!-- Visualization Container -->
-        <div id="sideBySideContainer" class="visualization-container" style="display: none;">
-            <!-- Control Panel -->
-            <div class="control-panel" id="animationControls">
-                <div class="control-group">
-                    <button id="prevBtn" class="control-btn" title="Previous Step">
-                        <span>⏮️</span>
-                    </button>
-                    <button id="playBtn" class="control-btn">
-                        <span>▶️</span> Play
-                    </button>
-                    <button id="pauseBtn" class="control-btn" disabled>
-                        <span>⏸️</span> Pause
-                    </button>
-                    <button id="nextBtn" class="control-btn" title="Next Step">
-                        <span>⏭️</span>
-                    </button>
-                    <button id="resetBtn" class="control-btn">
-                        <span>🔄</span> Reset
-                    </button>
-                </div>
-                <div class="control-group">
-                    <div class="speed-control" style="display: flex; align-items: center; gap: 10px;">
-                        <span style="font-size: 0.8rem; opacity: 0.8;">Speed:</span>
-                        <input type="range" id="speedSlider" min="0.5" max="2.5" step="0.1" value="1.5"
-                            style="width: 80px;">
-                        <span id="speedValue" style="font-size: 0.8rem; width: 30px;">1.5x</span>
+                    <textarea id="naturalLanguageInput" class="algorithm-input"
+                        placeholder="Example: Sort array using bubble sort OR Implement a PID controller OR Design an FIR filter OR Explain FFT algorithm"
+                        rows="4"></textarea>
+                    <div class="action-buttons">
+                        <button id="convertBtn" type="button" class="btn btn-primary btn-large">
+                            <!-- <span class="btn-icon"></span> -->
+                            Generate Visualization
+                        </button>
+                        <button id="clearBtn" type="button" class="btn btn-secondary btn-large">
+                            <span class="btn-icon">🗑️</span>
+                            Clear
+                        </button>
                     </div>
-                    <label class="voice-toggle">
-                        <input type="checkbox" id="voiceToggle">
-                        <span class="toggle-slider"></span>
-                        <span class="toggle-label">🔊 Voice</span>
-                    </label>
-                    <button id="exportBtn" class="control-btn" title="Export as Image/GIF">
-                        <span>💾</span> Export
-                    </button>
                 </div>
             </div>
 
-            <!-- Side by Side Panels -->
-            <div class="panels-wrapper">
-                <!-- Left: Animation Panel -->
-                <div class="panel animation-panel">
-                    <div class="panel-header">
-                        <h3>Animation</h3>
+            <!-- Activity History Section -->
+            <div class="history-section" id="historySection">
+                <div class="history-header">
+                    <h3>📚 Activity History</h3>
+                    <div class="history-controls">
+                        <div class="search-container">
+                            <input type="text" id="historySearch" placeholder="Search history..." class="search-input">
+                            <button id="clearSearchBtn" class="btn btn-secondary" style="padding: 4px 8px; font-size: 0.8rem; margin-left: 5px;">
+                                ✖️
+                            </button>
+                        </div>
+                        <button id="addTestHistoryBtn" class="btn btn-primary" style="padding: 6px 12px; font-size: 0.8rem;">
+                            🧪 Add Test
+                        </button>
+                        <button id="testHistoryBtn" class="btn btn-success" style="padding: 6px 12px; font-size: 0.8rem;">
+                            ✅ Test Add
+                        </button>
+                        <button id="refreshHistoryBtn" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;">
+                            🔄 Refresh
+                        </button>
+                        <button id="clearHistoryBtn" class="btn btn-danger" style="padding: 6px 12px; font-size: 0.8rem;">
+                            🗑️ Clear All
+                        </button>
                     </div>
-                    <div id="visualizerDisplay" class="panel-content">
-                        <!-- Visualization renders here -->
+                </div>
+                <div class="history-container" id="historyContainer">
+                    <div class="history-placeholder">
+                        <p>No activity history yet. Start generating visualizations to see your history here!</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loadingSpinner" class="loading-state" style="display: none;">
+                <div class="spinner"></div>
+                <p>Generating visualization...</p>
+            </div>
+
+            <!-- Visualization Container -->
+            <div id="sideBySideContainer" class="visualization-container" style="display: none;">
+                <!-- Control Panel -->
+                <div class="control-panel" id="animationControls">
+                    <div class="control-group">
+                        <button id="prevBtn" class="control-btn" title="Previous Step">
+                            <span>⏮️</span>
+                        </button>
+                        <button id="playBtn" class="control-btn">
+                            <span>▶️</span> Play
+                        </button>
+                        <button id="pauseBtn" class="control-btn" disabled>
+                            <span>⏸️</span> Pause
+                        </button>
+                        <button id="nextBtn" class="control-btn" title="Next Step">
+                            <span>⏭️</span>
+                        </button>
+                        <button id="resetBtn" class="control-btn">
+                            <span>🔄</span> Reset
+                        </button>
+                    </div>
+                    <div class="control-group">
+                        <div class="speed-control" style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 0.8rem; opacity: 0.8;">Speed:</span>
+                            <input type="range" id="speedSlider" min="0.5" max="2.5" step="0.1" value="1.5"
+                                style="width: 80px;">
+                            <span id="speedValue" style="font-size: 0.8rem; width: 30px;">1.5x</span>
+                        </div>
+                        <label class="voice-toggle">
+                            <input type="checkbox" id="voiceToggle">
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-label">🔊 Voice</span>
+                        </label>
+                        <button id="exportBtn" class="control-btn" title="Export as Image/GIF">
+                            <span>💾</span> Export
+                        </button>
                     </div>
                 </div>
 
-                <!-- Right: Content Panel -->
-                <div class="panel right-panel">
-                    <div class="tabs">
-                        <button class="tab-btn active" data-tab="pseudocode">Pseudocode</button>
-                        <button class="tab-btn" data-tab="explanation">AI Explanation</button>
-                        <button class="tab-btn" data-tab="analysis">Analysis & Compare</button>
-                    </div>
-                    <div id="pseudocodeTab" class="tab-content active">
-                        <div id="pseudocodeDisplay" class="panel-content pseudocode-content">
-                            <p class="placeholder">Your pseudocode will appear here...</p>
+                <!-- Side by Side Panels -->
+                <div class="panels-wrapper">
+                    <!-- Left: Animation Panel -->
+                    <div class="panel animation-panel">
+                        <div class="panel-header">
+                            <h3>Animation</h3>
+                        </div>
+                        <div id="visualizerDisplay" class="panel-content">
+                            <!-- Visualization renders here -->
                         </div>
                     </div>
-                    <div id="explanationTab" class="tab-content" style="display: none;">
-                        <div id="explanationDisplay" class="panel-content explanation-content"
-                            style="padding: 15px; line-height: 1.6; color: #333; overflow-y: auto; max-height: 400px;">
-                            <p class="placeholder">Algorithm explanation will appear here...</p>
+
+                    <!-- Right: Content Panel -->
+                    <div class="panel right-panel">
+                        <div class="tabs">
+                            <button class="tab-btn active" data-tab="pseudocode">Pseudocode</button>
+                            <button class="tab-btn" data-tab="code">Generated Code</button>
+                            <button class="tab-btn" data-tab="editor">Code Editor</button>
+                            <button class="tab-btn" data-tab="explanation">AI Explanation</button>
+                            <button class="tab-btn" data-tab="analysis">Analysis & Compare</button>
                         </div>
-                        <hr style="margin: 10px 15px; border-top: 1px solid #ccc;">
-                        <div style="padding: 0 15px 15px 15px;">
-                            <h4 style="margin-bottom: 8px; color: #3b82f6;">🧠 Why this Algorithm?</h4>
-                            <div id="explanationWhyDisplay" style="font-size: 0.95rem; color: #444; background: #eff6ff; padding: 10px; border-radius: 6px;">
-                                Awaiting analysis...
+                        <div id="pseudocodeTab" class="tab-content active">
+                            <div id="pseudocodeDisplay" class="panel-content pseudocode-content">
+                                <p class="placeholder">Your pseudocode will appear here...</p>
                             </div>
                         </div>
-                    </div>
-                    <div id="analysisTab" class="tab-content" style="display: none;">
-                        <div class="panel-content analysis-content" style="padding: 15px; overflow-y: auto; max-height: 500px;">
-                            <h4 style="margin-bottom: 10px;">Complexity Analysis</h4>
-                            <div id="complexityText" style="padding: 10px; background: #f8fafc; border-radius: 6px; margin-bottom: 15px; font-family: monospace;">
-                                Waiting for data...
+                        <div id="codeTab" class="tab-content" style="display: none;">
+                            <div id="codeDisplay" class="panel-content code-content">
+                                <p class="placeholder"
+                                    style="padding:2rem;text-align:center;color:rgba(224,224,224,0.35);">Generate code
+                                    by selecting a programming language above, then click Convert.</p>
                             </div>
-                            <div style="width: 100%; max-width: 400px; margin: 0 auto; margin-bottom: 25px;">
-                                <canvas id="complexityChart"></canvas>
+                        </div>
+                        <div id="editorTab" class="tab-content" style="display: none;">
+                            <div class="panel-content editor-content">
+                                <!-- Editor Header -->
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 0 10px;">
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <label for="editorLanguage" style="font-size: 0.9rem; font-weight: 600;">Language:</label>
+                                        <select id="editorLanguage" style="padding: 4px 8px; border-radius: 4px; border: 1px solid #ccc; font-size: 0.9rem;">
+                                            <option value="javascript">JavaScript</option>
+                                            <option value="python">Python</option>
+                                            <option value="html">HTML</option>
+                                        </select>
+                                    </div>
+                                    <div style="display: flex; gap: 8px;">
+                                        <button id="runCodeBtn" class="btn btn-primary" style="padding: 6px 16px; font-size: 0.9rem;">
+                                            ▶️ Run Code
+                                        </button>
+                                        <button id="clearEditorBtn" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.9rem;">
+                                            🗑️ Clear
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Code Editor -->
+                                <div style="margin-bottom: 15px;">
+                                    <textarea id="codeEditor" 
+                                        placeholder="// Write your JavaScript code here...
+console.log('Hello, World!');
+
+function fibonacci(n) {
+    if (n <= 1) return n;
+    return fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+console.log('Fibonacci(10):', fibonacci(10));"
+                                        style="width: 100%; height: 200px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-family: 'Consolas', 'Monaco', 'Courier New', monospace; font-size: 13px; line-height: 1.4; resize: vertical; background: #f8f9fa; color: #333;"></textarea>
+                                </div>
+                                
+                                <!-- Console Output -->
+                                <div style="border-top: 2px solid #e9ecef;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #f8f9fa; border-bottom: 1px solid #e9ecef;">
+                                        <h4 style="margin: 0; font-size: 0.9rem; font-weight: 600;">🖥️ Console Output</h4>
+                                        <button id="clearConsoleBtn" style="padding: 4px 8px; font-size: 0.8rem; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                                            Clear
+                                        </button>
+                                    </div>
+                                    <div id="consoleOutput" style="padding: 12px; background: #1e1e1e; color: #d4d4d4; font-family: 'Consolas', 'Monaco', 'Courier New', monospace; font-size: 12px; line-height: 1.4; min-height: 150px; max-height: 300px; overflow-y: auto; white-space: pre-wrap; border-radius: 0 0 6px 6px;">
+                                        <span style="color: #6a9955;">// Console output will appear here...</span>
+                                    </div>
+                                </div>
                             </div>
-                            
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                                <h4 style="margin: 0;">Algorithm Comparison</h4>
+                        </div>
+                        <div id="explanationTab" class="tab-content" style="display: none;">
+                            <div id="explanationDisplay" class="panel-content explanation-content"
+                                style="padding: 15px; line-height: 1.6; color: #333; overflow-y: auto; max-height: 400px;">
+                                <p class="placeholder">Algorithm explanation will appear here...</p>
                             </div>
-                            <div id="comparisonTableDisplay" style="width: 100%; overflow-x: auto;">
-                                <p class="placeholder">Comparison table will appear here...</p>
+                            <hr style="margin: 10px 15px; border-top: 1px solid #ccc;">
+                            <div style="padding: 0 15px 15px 15px;">
+                                <h4 style="margin-bottom: 8px; color: #3b82f6;">🧠 Why this Algorithm?</h4>
+                                <div id="explanationWhyDisplay"
+                                    style="font-size: 0.95rem; color: #444; background: #eff6ff; padding: 10px; border-radius: 6px;">
+                                    Awaiting analysis...
+                                </div>
+                            </div>
+                        </div>
+                        <div id="analysisTab" class="tab-content" style="display: none;">
+                            <div class="panel-content analysis-content"
+                                style="padding: 15px; overflow-y: auto; max-height: 500px;">
+                                <h4 style="margin-bottom: 10px;">Complexity Analysis</h4>
+                                <div id="complexityText"
+                                    style="padding: 10px; background: #f8fafc; border-radius: 6px; margin-bottom: 15px; font-family: monospace;">
+                                    Waiting for data...
+                                </div>
+                                <div style="width: 100%; max-width: 400px; margin: 0 auto; margin-bottom: 25px;">
+                                    <canvas id="complexityChart"></canvas>
+                                </div>
+
+                                <div
+                                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                    <h4 style="margin: 0;">Algorithm Comparison</h4>
+                                </div>
+                                <div id="comparisonTableDisplay" style="width: 100%; overflow-x: auto;">
+                                    <p class="placeholder">Comparison table will appear here...</p>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Error Message -->
-        <div id="errorMessage" class="error-banner" style="display: none;"></div>
+            <!-- Error Message -->
+            <div id="errorMessage" class="error-banner" style="display: none;"></div>
     </main>
 
     <script src="js/storage-manager.js"></script>
@@ -214,6 +325,8 @@
     <script src="js/advanced-renderer.js"></script>
     <script src="js/animation-engine.js"></script>
     <script src="js/nlp-handler.js"></script>
+    <script src="js/code-editor.js"></script>
+    <script src="js/mongodb-history.js"></script>
     <script src="js/main.js"></script>
 </body>
 

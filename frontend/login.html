@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Auth</title>
+  <link rel="stylesheet" href="css/auth.css">
+</head>
+<body>
+
+<div class="container">
+  <div class="card">
+
+    <!-- LEFT SIDE -->
+    <div class="left">
+      <h2 id="title">Sign Up</h2>
+
+      <div id="error-message" class="error-message"></div>
+
+      <input type="text" id="name" placeholder="Full Name">
+      <input type="email" id="email" placeholder="Email Address">
+      <input type="password" id="password" placeholder="Password">
+      <input type="password" id="confirm" placeholder="Confirm Password">
+
+    </div>
+
+    <!-- RIGHT SIDE -->
+    <div class="right">
+      <button onclick="handleAuth()" class="main-btn">Sign Up</button>
+
+      <p id="switchText">
+        Already have an account? 
+        <span onclick="toggleMode()">Log in</span>
+      </p>
+
+      <p class="divider">Or</p>
+
+      <button class="social google">Sign up with Google</button>
+      <button class="social facebook">Sign up with Facebook</button>
+    </div>
+
+  </div>
+</div>
+
+<script src="js/auth.js"></script>
+</body>
+</html>

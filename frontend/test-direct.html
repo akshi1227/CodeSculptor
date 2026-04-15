@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Direct History Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #1a1a1a; color: white; }
+        .test-section { background: #2d2d2d; padding: 15px; margin: 10px 0; border-radius: 8px; }
+        button { background: #007acc; color: white; border: none; padding: 8px 12px; margin: 5px; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #005a9e; }
+        .output { background: #000; padding: 10px; border-radius: 4px; margin: 10px 0; font-family: monospace; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h1>Direct History System Test</h1>
+    
+    <div class="test-section">
+        <h3>Test localStorage directly</h3>
+        <button onclick="addTestEntry()">Add Test Entry</button>
+        <button onclick="showAllHistory()">Show All History</button>
+        <button onclick="clearAllHistory()">Clear All History</button>
+        <div id="output" class="output"></div>
+    </div>
+    
+    <script>
+        function getCurrentUser() {
+            const currentUserStr = localStorage.getItem('currentUser');
+            if (!currentUserStr) return 'guest';
+            try {
+                const currentUser = JSON.parse(currentUserStr);
+                return currentUser.email || 'guest';
+            } catch (e) {
+                return currentUserStr || 'guest';
+            }
+        }
+        
+        function getHistoryKey() {
+            const user = getCurrentUser();
+            return `activity_history_${user}`;
+        }
+        
+        function addTestEntry() {
+            const user = getCurrentUser();
+            const key = getHistoryKey();
+            
+            // Get existing history
+            let history = [];
+            const existingData = localStorage.getItem(key);
+            if (existingData) {
+                try {
+                    history = JSON.parse(existingData);
+                } catch (e) {
+                    console.error('Failed to parse existing history:', e);
+                }
+            }
+            
+            // Add new entry
+            const newEntry = {
+                id: Date.now(),
+                input: "Direct test: " + new Date().toLocaleTimeString(),
+                pseudocode: "function test() { return true; }",
+                generatedCode: "console.log('test');",
+                language: "javascript",
+                timestamp: new Date().toISOString(),
+                duration: 100
+            };
+            
+            history.unshift(newEntry);
+            
+            // Save back to localStorage
+            localStorage.setItem(key, JSON.stringify(history));
+            
+            console.log('Direct test: Added entry for user:', user);
+            console.log('Direct test: History key:', key);
+            console.log('Direct test: Total items:', history.length);
+            
+            showAllHistory();
+        }
+        
+        function showAllHistory() {
+            const user = getCurrentUser();
+            const key = getHistoryKey();
+            const historyData = localStorage.getItem(key);
+            const history = historyData ? JSON.parse(historyData) : [];
+            
+            const output = document.getElementById('output');
+            if (history.length === 0) {
+                output.textContent = 'No history found for user: ' + user;
+            } else {
+                output.textContent = `History for ${user} (${history.length} items):\n` + 
+                    history.map((item, i) => `${i+1}. ${item.input} (${new Date(item.timestamp).toLocaleString()})`).join('\n');
+            }
+            
+            console.log('Direct test: Retrieved', history.length, 'items for user:', user);
+        }
+        
+        function clearAllHistory() {
+            const user = getCurrentUser();
+            const key = getHistoryKey();
+            localStorage.removeItem(key);
+            console.log('Direct test: Cleared history for user:', user);
+            showAllHistory();
+        }
+        
+        // Auto-show on load
+        showAllHistory();
+    </script>
+</body>
+</html>

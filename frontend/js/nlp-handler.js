@@ -6,9 +6,9 @@ class NLPHandler {
 
     }
 
-    async convertToPseudocode(text, highAccuracy = false) {
+    async convertToPseudocode(text, highAccuracy = false, language = 'pseudocode', domain = 'general') {
         try {
-            console.log(`🚀 Sending request to ${this.apiUrl}/api/convert...`);
+            console.log(`🚀 Sending request to ${this.apiUrl}/api/convert... Language: ${language}`);
             const response = await fetch(`${this.apiUrl}/api/convert`, {
                 method: 'POST',
                 headers: {
@@ -16,7 +16,9 @@ class NLPHandler {
                 },
                 body: JSON.stringify({
                     text,
-                    high_accuracy: highAccuracy
+                    high_accuracy: highAccuracy,
+                    language,
+                    domain
                 })
             });
 

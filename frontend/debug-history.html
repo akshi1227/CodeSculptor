@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>History Debug</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #1a1a1a; color: white; }
+        .debug-section { background: #2d2d2d; padding: 15px; margin: 10px 0; border-radius: 8px; }
+        button { background: #007acc; color: white; border: none; padding: 8px 12px; margin: 5px; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #005a9e; }
+        .output { background: #000; padding: 10px; border-radius: 4px; margin: 10px 0; font-family: monospace; }
+    </style>
+</head>
+<body>
+    <h1>History System Debug</h1>
+    
+    <div class="debug-section">
+        <h3>1. Check User Status</h3>
+        <button onclick="checkUser()">Check Current User</button>
+        <div id="userOutput" class="output"></div>
+    </div>
+    
+    <div class="debug-section">
+        <h3>2. Test Simple History System</h3>
+        <button onclick="testSimpleHistory()">Add Test Entry</button>
+        <button onclick="showHistory()">Show History</button>
+        <div id="historyOutput" class="output"></div>
+    </div>
+    
+    <div class="debug-section">
+        <h3>3. Check localStorage</h3>
+        <button onclick="checkLocalStorage()">Show All Keys</button>
+        <div id="storageOutput" class="output"></div>
+    </div>
+    
+    <script>
+        function checkUser() {
+            const currentUser = localStorage.getItem('currentUser');
+            document.getElementById('userOutput').textContent = 
+                currentUser ? `User: ${currentUser}` : 'No user logged in';
+        }
+        
+        function testSimpleHistory() {
+            // Initialize simple history if not exists
+            if (!window.simpleHistory) {
+                // Create a simple test object
+                window.simpleHistory = {
+                    history: [],
+                    addExecution: function(data) {
+                        const execution = {
+                            id: Date.now(),
+                            input: data.input,
+                            timestamp: new Date().toISOString()
+                        };
+                        this.history.unshift(execution);
+                        console.log('Test: Added execution', execution);
+                        this.saveHistory();
+                    },
+                    saveHistory: function() {
+                        const user = 'test@example.com';
+                        const key = `activity_history_${user}`;
+                        localStorage.setItem(key, JSON.stringify(this.history));
+                        console.log('Test: Saved history to', key);
+                    },
+                    renderHistory: function() {
+                        console.log('Test: Current history', this.history);
+                    }
+                };
+            }
+            
+            window.simpleHistory.addExecution({
+                input: "Test entry: " + new Date().toLocaleTimeString()
+            });
+            
+            document.getElementById('historyOutput').textContent = 
+                'Test entry added! Check console for details.';
+        }
+        
+        function showHistory() {
+            if (window.simpleHistory) {
+                const user = 'test@example.com';
+                const key = `activity_history_${user}`;
+                const historyData = localStorage.getItem(key);
+                const history = historyData ? JSON.parse(historyData) : [];
+                
+                document.getElementById('historyOutput').textContent = 
+                    `History (${history.length} items):\n` + 
+                    history.map((item, i) => `${i+1}. ${item.input} (${item.timestamp})`).join('\n');
+            } else {
+                document.getElementById('historyOutput').textContent = 'Simple history not initialized';
+            }
+        }
+        
+        function checkLocalStorage() {
+            const keys = Object.keys(localStorage);
+            const output = keys.map(key => `${key}: ${localStorage.getItem(key).substring(0, 50)}...`).join('\n');
+            document.getElementById('storageOutput').textContent = output;
+        }
+        
+        // Auto-check on load
+        checkUser();
+        showHistory();
+    </script>
+</body>
+</html>

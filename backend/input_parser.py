@@ -11,11 +11,21 @@ class InputParser:
     """Parse various data structure inputs from natural language"""
     
     @staticmethod
-    def parse_input(text: str, algorithm_type: str) -> Dict[str, Any]:
+    def parse_input(text: str, algorithm_type: str, domain: str = 'general') -> Dict[str, Any]:
         """
         Main parser that routes to specific parsers based on algorithm type
+        For ECE/EEE domain, skip numeric validation
         """
         text = text.strip()
+        
+        # ECE/EEE domain algorithms don't require numeric data
+        if domain == 'ece' or domain == 'eee':
+            return {
+                "data": text,
+                "error": None,
+                "valid": True,
+                "type": "ece_algorithm"
+            }
         
         # Try to extract data based on algorithm type
         if algorithm_type in ['bubble_sort', 'merge_sort', 'quick_sort', 'insertion_sort', 'selection_sort']:

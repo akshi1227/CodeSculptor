@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scenario Learning — CodeSculptor AI</title>
+    <meta name="description" content="Learn data structures and algorithms through real-world scenario problems. CodeSculptor AI analyzes your scenario and reveals the best data structure with step-by-step visualization.">
+    <link rel="stylesheet" href="css/scenario.css">
+    <!-- Mermaid for diagrams -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({
+            startOnLoad: false,
+            theme: 'dark',
+            themeVariables: {
+                primaryColor: '#1e3a4a',
+                primaryTextColor: '#e0e8f0',
+                lineColor: 'rgba(255,255,255,0.3)',
+                secondaryColor: '#0f1929',
+                tertiaryColor: '#080e1a'
+            }
+        });
+    </script>
+</head>
+
+<body>
+
+<!-- ===== HEADER ===== -->
+<header class="scenario-header">
+    <div class="header-content">
+        <a href="index.html" class="logo">Code<span>Sculptor</span></a>
+        <nav class="nav-links">
+            <a href="index.html"    class="nav-link">Home</a>
+            <a href="app.html"      class="nav-link">Visualizer</a>
+            <a href="scenario.html" class="nav-link active">Scenario Lab</a>
+            <a href="examples.html" class="nav-link">Examples</a>
+            <a href="get-started.html" class="nav-link">Guide</a>
+        </nav>
+    </div>
+</header>
+
+<!-- ===== MAIN ===== -->
+<main class="scenario-main">
+
+    <!-- Hero -->
+    <section class="scenario-hero">
+        <div class="badge">🧪 Scenario-Based Learning</div>
+        <h1>Solve Real-World Scenarios,<br>Learn the Right Data Structure</h1>
+        <p>Describe a real-world problem — like managing restaurant orders or building a browser history — and AI will analyze it, reveal the optimal data structure, and walk you through the solution step-by-step.</p>
+    </section>
+
+    <!-- Preset Cards -->
+    <section class="preset-section">
+        <h3>⚡ Quick Scenarios — Click to Load</h3>
+        <div class="preset-grid" id="presetsGrid">
+            <!-- Injected by scenario-engine.js -->
+        </div>
+    </section>
+
+    <!-- Error -->
+    <div class="error-card" id="errorCard"></div>
+
+    <!-- Input -->
+    <div class="scenario-input-card">
+        <div class="input-header">
+            <h2>📝 Describe Your Scenario</h2>
+            <label class="challenge-mode-toggle" title="Guess the data structure before seeing the answer!">
+                <input type="checkbox" id="challengeToggle">
+                <span class="toggle-pill"></span>
+                <span>🏆 Challenge Mode</span>
+            </label>
+        </div>
+
+        <!-- Challenge Panel (shown when challenge mode ON) -->
+        <div id="challengePanel"></div>
+
+        <textarea
+            id="scenarioInput"
+            class="scenario-textarea"
+            rows="5"
+            placeholder="Example: A busy restaurant keeps receiving customer orders. The chef needs to process each order in the exact order it was received — the first order in should be the first prepared. What data structure should the system use?
+
+Or try: Design a browser history system that supports back and forward navigation..."></textarea>
+
+        <div class="input-actions">
+            <button class="btn-analyze" id="analyzeBtn">
+                <span>🔍</span> Analyze Scenario
+                <span style="font-size:0.8em;opacity:0.7;margin-left:0.3rem">Ctrl+Enter</span>
+            </button>
+            <button class="btn-clear" id="clearBtn">
+                <span>🗑️</span> Clear
+            </button>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div class="scenario-loading" id="scenarioLoading">
+        <div class="brain-loader">
+            <div class="ring"></div>
+            <div class="ring"></div>
+            <div class="ring"></div>
+            <div class="brain-icon">🧠</div>
+        </div>
+        <p>Analyzing your scenario…</p>
+        <p class="loading-sub">Identifying data structures & generating visualization</p>
+    </div>
+
+    <!-- ===== RESULTS ===== -->
+    <div id="scenarioResults">
+
+        <!-- DS Reveal Banner -->
+        <div class="ds-reveal-banner animate-up" id="dsBanner">
+            <div class="ds-icon-large" id="dsIcon">📦</div>
+            <div class="ds-reveal-info">
+                <div class="ds-reveal-label">Best Data Structure Identified</div>
+                <div class="ds-reveal-name" id="dsName">Loading…</div>
+                <div class="ds-reveal-why" id="dsWhy"></div>
+                <div class="ds-meta-badges">
+                    <span class="meta-badge difficulty-beginner" id="dsDifficulty">🎯 Beginner</span>
+                    <span class="meta-badge" id="dsCategory">📁 Category</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main 2-column grid -->
+        <div class="scenario-grid">
+
+            <!-- LEFT: Step Story Panel -->
+            <div class="story-panel animate-up" style="transition-delay:0.1s">
+                <div class="panel-title">
+                    <span class="icon">📖</span> Step-by-Step Story
+                </div>
+                <div class="step-timeline" id="stepTimeline">
+                    <!-- Steps injected by JS -->
+                </div>
+                <div class="step-controls">
+                    <button class="step-btn" id="prevStepBtn" title="Previous Step">⏮</button>
+                    <button class="step-play-btn" id="playStepBtn">▶ Auto Play</button>
+                    <button class="step-btn" id="nextStepBtn" title="Next Step">⏭</button>
+                    <span class="step-progress" id="stepProgress">0 / 0</span>
+                </div>
+            </div>
+
+            <!-- RIGHT: Canvas Visualization -->
+            <div class="viz-panel animate-up" style="transition-delay:0.2s">
+                <div class="panel-title">
+                    <span class="icon">🎨</span> Live Data Structure Visualization
+                </div>
+                <div class="viz-canvas-wrap">
+                    <canvas id="scenarioCanvas" style="width:100%;height:300px;"></canvas>
+                </div>
+                <div style="padding:0.75rem 1.5rem;border-top:1px solid var(--color-border);font-size:0.78rem;color:var(--color-muted);">
+                    ↑ The canvas updates as you step through the story
+                </div>
+            </div>
+
+            <!-- FULL WIDTH: Code Panel -->
+            <div class="code-panel animate-up" style="transition-delay:0.3s">
+                <div class="code-tabs">
+                    <button class="code-tab-btn active" data-tab="pseudocode">
+                        📋 Pseudocode
+                    </button>
+                    <button class="code-tab-btn" data-tab="code">
+                        🐍 Python Code
+                    </button>
+                </div>
+
+                <!-- Pseudocode Tab -->
+                <div class="code-tab-content active" data-tab="pseudocode">
+                    <div class="pseudocode-block" id="pseudocodeBlock"></div>
+                </div>
+
+                <!-- Code Tab -->
+                <div class="code-tab-content" data-tab="code">
+                    <div class="code-block-wrap">
+                        <div class="code-block-header">
+                            <span class="code-lang-tag">🐍 Python</span>
+                            <button class="copy-code-btn" id="copyCodeBtn">Copy</button>
+                        </div>
+                        <pre><code id="codeBlock"></code></pre>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /scenario-grid -->
+
+        <!-- Bottom: Diagram + Complexity -->
+        <div class="bottom-grid">
+
+            <!-- Mermaid Diagram -->
+            <div class="diagram-card animate-up" style="transition-delay:0.4s">
+                <div class="panel-title">
+                    <span class="icon">🗺️</span> Algorithm Flow Diagram
+                </div>
+                <div class="mermaid" id="mermaidDiagram"></div>
+            </div>
+
+            <!-- Complexity + Real World -->
+            <div class="complexity-card animate-up" style="transition-delay:0.5s">
+                <div class="panel-title">
+                    <span class="icon">⚡</span> Complexity Analysis
+                </div>
+                <div class="complexity-grid" id="complexityContent">
+                    <!-- Injected by JS -->
+                </div>
+                <div class="real-world-card">
+                    <span class="icon">🌍</span>
+                    <p id="realWorldText"></p>
+                </div>
+            </div>
+
+        </div><!-- /bottom-grid -->
+
+    </div><!-- /scenarioResults -->
+
+</main>
+
+<script src="js/scenario-engine.js"></script>
+</body>
+</html>
