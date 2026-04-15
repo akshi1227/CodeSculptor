@@ -1622,14 +1622,12 @@ def execute_code():
                 temp_file = f.name
             
             try:
-                # Execute with timeout and security restrictions
+                # Execute with timeout (Windows compatible)
                 result = subprocess.run(
                     ['python', temp_file],
                     capture_output=True,
                     text=True,
-                    timeout=5,
-                    # Security: limit memory and prevent network access
-                    preexec_fn=lambda: os.setuid(65534) if os.name != 'nt' else None
+                    timeout=5
                 )
                 
                 output = result.stdout

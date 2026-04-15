@@ -314,12 +314,23 @@ class MongoDBHistory {
         const diffHours = Math.floor(diffMs / 3600000);
         const diffDays = Math.floor(diffMs / 86400000);
         
+        // Format: "Apr 15, 9:23 PM" or "Just now" / "5m ago" for very recent
+        const timeStr = date.toLocaleTimeString('en-US', { 
+            hour: 'numeric', 
+            minute: '2-digit',
+            hour12: true 
+        });
+        const dateStr = date.toLocaleDateString('en-US', { 
+            month: 'short', 
+            day: 'numeric' 
+        });
+        
         if (diffMins < 1) return 'Just now';
-        if (diffMins < 60) return `${diffMins}m ago`;
-        if (diffHours < 24) return `${diffHours}h ago`;
-        if (diffDays < 7) return `${diffDays}d ago`;
-        if (diffDays < 30) return date.toLocaleDateString();
-        return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+        if (diffMins < 60) return `${diffMins}m ago at ${timeStr}`;
+        if (diffHours < 24) return `${diffHours}h ago at ${timeStr}`;
+        if (diffDays === 1) return `Yesterday at ${timeStr}`;
+        if (diffDays < 7) return `${dateStr}, ${timeStr}`;
+        return `${dateStr}, ${timeStr}`;
     }
     
     truncateText(text, maxLength = 100) {
