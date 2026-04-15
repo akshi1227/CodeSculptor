@@ -96,7 +96,7 @@ print("Fibonacci(10):", fibonacci(10))`,
         this.consoleOutput.innerHTML = '<span style="color: #6a9955;">// Console output will appear here...</span>';
     }
     
-    runCode() {
+    async runCode() {
         const code = this.editor.value.trim();
         const language = this.languageSelect.value;
         
@@ -114,7 +114,7 @@ print("Fibonacci(10):", fibonacci(10))`,
                     this.runJavaScript(code);
                     break;
                 case 'python':
-                    this.runPython(code);
+                    await this.runPython(code);
                     break;
                 case 'html':
                     this.runHTML(code);
@@ -169,11 +169,40 @@ print("Fibonacci(10):", fibonacci(10))`,
         }
     }
     
-    runPython(code) {
-        this.logToConsole('🐍 Python execution is not available in the browser', 'warn');
-        this.logToConsole('💡 Tip: Use JavaScript for browser-based execution', 'info');
-        this.logToConsole('📋 Your Python code:', 'info');
-        this.logToConsole(code, 'code');
+    async runPython(code) {
+        this.logToConsole('🐍 Sending Python code to backend for execution...', 'info');
+        
+        try {
+            const response = await fetch('http://localhost:5000/api/execute', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    code: code,
+                    language: 'python'
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                this.logToConsole('✅ Python code executed successfully!', 'success');
+                if (result.output) {
+                    this.logToConsole('📤 Output:', 'info');
+                    this.logToConsole(result.output, 'log');
+                }
+                if (result.error) {
+                    this.logToConsole('⚠️ Errors:', 'warn');
+                    this.logToConsole(result.error, 'error');
+                }
+            } else {
+                this.logToConsole(`❌ Error: ${result.error}`, 'error');
+            }
+        } catch (error) {
+            this.logToConsole(`❌ Network Error: ${error.message}`, 'error');
+            this.logToConsole('💡 Make sure backend server is running on http://localhost:5000', 'info');
+        }
     }
     
     runHTML(code) {

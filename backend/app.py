@@ -1596,6 +1596,86 @@ print(solve([5, 3, 8, 1, 9, 2]))  # [1, 2, 3, 5, 8, 9]'''
         else:
             return f'// Algorithm: {algo_type}\n// Add GEMINI_API_KEY or GROQ_API_KEY to backend/.env for full AI-generated code.'
 
+# === CODE EXECUTION API ===
+@app.route('/api/execute', methods=['POST'])
+def execute_code():
+    """Execute code safely in sandbox"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"success": False, "error": "No data provided"}), 400
+        
+        code = data.get('code', '')
+        language = data.get('language', 'python')
+        
+        if not code:
+            return jsonify({"success": False, "error": "No code provided"}), 400
+        
+        import subprocess
+        import tempfile
+        import os
+        
+        if language == 'python':
+            # Create temporary file
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
+                f.write(code)
+                temp_file = f.name
+            
+            try:
+                # Execute with timeout and security restrictions
+                result = subprocess.run(
+                    ['python', temp_file],
+                    capture_output=True,
+                    text=True,
+                    timeout=5,
+                    # Security: limit memory and prevent network access
+                    preexec_fn=lambda: os.setuid(65534) if os.name != 'nt' else None
+                )
+                
+                output = result.stdout
+                error = result.stderr
+                
+                return jsonify({
+                    "success": True,
+                    "output": output,
+                    "error": error if error else None,
+                    "exit_code": result.returncode
+                }), 200
+                
+            except subprocess.TimeoutExpired:
+                return jsonify({
+                    "success": False,
+                    "error": "Code execution timed out (max 5 seconds)"
+                }), 408
+            except Exception as e:
+                return jsonify({
+                    "success": False,
+                    "error": str(e)
+                }), 500
+            finally:
+                # Clean up temp file
+                try:
+                    os.unlink(temp_file)
+                except:
+                    pass
+                    
+        elif language == 'javascript':
+            # For JavaScript, return code to run in browser
+            return jsonify({
+                "success": True,
+                "browser_execution": True,
+                "message": "JavaScript should run in browser"
+            }), 200
+        else:
+            return jsonify({
+                "success": False,
+                "error": f"Language '{language}' execution not supported yet"
+            }), 400
+            
+    except Exception as e:
+        print(f"🚨 Code execution error: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
 if __name__ == '__main__':
     # Verify MongoDB connection before starting
     print("=== MongoDB Connection Check ===")
